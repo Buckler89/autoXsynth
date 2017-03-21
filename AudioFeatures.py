@@ -3,8 +3,6 @@ import soundfile as sf
 import numpy as np
 import librosa
 
-
-
 class AudioFeatures:
 
     def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels='20'):
@@ -66,7 +64,6 @@ class AudioFeatures:
                 if self.feature == 'mfcc':
                     y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
                     np.save(os.path.join(feat_fold_name, feat_name), y)
-
 
 
 
