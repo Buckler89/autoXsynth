@@ -109,3 +109,55 @@ if args.config_filename is not None:
     args = parser.parse_args(namespace=args)
 
 ###################################################END PARSER ARGUMENT SECTION########################################
+
+
+###################################################INIT LOG########################################
+# redirect all the stream of both standar.out, standard.err to the same logger
+strID = str(args.id)
+
+print("init log")
+
+nameFileLogCsv = None  # init the name
+logFolder = os.path.join('logs', args.case)  # need also for saving csv file!
+u.makedir(logFolder)
+nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
+nameFileLogCsv = os.path.join(logFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis
+if args.log:
+    import logging
+    import sys
+
+    u.makedir(logFolder)  # crea la fold solo se non esiste
+    if os.path.isfile(nameFileLog):  # if there is a old log, save it with another name
+        fileInFolder = [x for x in os.listdir(logFolder) if x.startswith('process_')]
+        os.rename(nameFileLog, nameFileLog + '_' + str(len(fileInFolder) + 1))  # so the name is different
+        # rename also the csv log for the losses
+        if os.path.isfile(nameFileLogCsv):  # if there is a old log, save it with another name
+            os.rename(nameFileLogCsv, nameFileLogCsv + '_' + str(len(fileInFolder) + 1))  # so the name is different
+
+    stdout_logger = logging.getLogger(strID)
+    sl = u.StreamToLogger(stdout_logger, nameFileLog, logging.INFO)
+    sys.stdout = sl  # ovverride funcion
+
+    stderr_logger = logging.getLogger(strID)
+    sl = u.StreamToLogger(stderr_logger, nameFileLog, logging.ERROR)
+    sys.stderr = sl  # ovverride funcion
+###################################################END INIT LOG########################################
+
+print("LOG OF PROCESS ID = " + strID)
+ts0 = time.time()
+st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
+print("experiment start in date: " + st0)
+
+
+#set folders destination
+destPath='process_'+str(args.id)
+u.makedir(destPath)
+#todo make subfolder
+
+
+#TODO LOAD DATASET
+
+
+#TODO DEF AUTOENCODER
+#model copile
+#model fit
