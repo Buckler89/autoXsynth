@@ -16,20 +16,20 @@ import numpy as np
 #     #     global logger
 #     #     logger = u.MyLogger(id, logToFile)
 
-def load_A3FALL(spectrogramsPath):
+def load_DATASET(datasetPath):
     """
     Carica tutto il dataset (spettri) in una lista di elementi [filename , matrix ]
     """
     print("Loading A3FALL dataset")
-    a3fall = list()
-    for root, dirnames, filenames in os.walk(spectrogramsPath):
+    dataset = list()
+    for root, dirnames, filenames in os.walk(datasetPath):
         i = 0
         for file in filenames:
             matrix = np.load(os.path.join(root, file))
             data = [file, matrix]
-            a3fall.append(data)
+            dataset.append(data)
             i += 1
-    return a3fall
+    return dataset
 
 
 def awgn_padding_set(set_to_pad, loc=0.0, scale=1.0):
