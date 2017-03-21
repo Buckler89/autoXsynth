@@ -496,6 +496,11 @@ class autoencoder_fall_detection:
 
         return self._autoencoder
 
+    def define_dense_arch(self, params):
+        input_img = Input(shape=params.input_shape)
+
+        return self._autoencoder
+
     def model_compile(self, model=None, optimizer='adadelta', learning_rate=1.0, loss='mse'):
         """
         compila il modello con i parametri passati: se non viene passato compila il modello istanziato dalla classe
