@@ -7,7 +7,7 @@ import librosa
 
 class AudioFeatures:
 
-    def __init__(self, feature='stft', n_fft=4096, win_len=1024, hop=1024, path='samples', extension='wav', channels='20'):
+    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels='20'):
         self.n_fft = n_fft
         self.feature = feature
         self.win_len = win_len
@@ -49,20 +49,27 @@ class AudioFeatures:
         samples_list = AudioFeatures.scan_folder(self)
         feat_fold_name = os.path.join(self.path, self.feature)
 
-        if not feat_fold_name:
+        if not os.path.isdir(feat_fold_name):
             os.makedirs(feat_fold_name)
 
-        for i in range(0, len(samples_list)):
-            filename = samples_list[i]
-            audio, sample_rate = sf.read(filename, dtype=np.float32)
+        for filename in samples_list:
+            feat_name = os.path.basename(filename)[0:-4] + ".npy"
+            if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
+                print ("This file exists. Skipping!");
+            else:
+                audio, sample_rate = sf.read(filename, dtype=np.float32)
 
-            if self.feature == 'stft':
-                y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
-                np.save(path.join(feat_fold_name, file[0:-4]), y)
+                if self.feature == 'stft':
+                    y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
+                    np.save(os.path.join(feat_fold_name, feat_name), y)
 
-            if self.feature == 'mfcc':
-                y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
-                np.save(path.join(feat_fold_name, file[0:-4]), y)
+                if self.feature == 'mfcc':
+                    y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
+                    np.save(os.path.join(feat_fold_name, feat_name), y)
+
+
+
+
 
 
 
