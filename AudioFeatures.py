@@ -53,7 +53,7 @@ class AudioFeatures:
         for filename in samples_list:
             feat_name = os.path.basename(filename)[0:-4] + ".npy"
             if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
-                print ("This file exists. Skipping!");
+                print ("This file exists. Skipping!")
             else:
                 audio, sample_rate = sf.read(filename, dtype=np.float32)
 

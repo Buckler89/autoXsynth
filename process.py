@@ -51,24 +51,24 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
 
 # CNN params
-parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
-parser.add_argument("-is", "--cnn-input-shape", dest="cnn_input_shape", action=eval_action, default=[1, 129, 197])
-parser.add_argument("-kn", "--kernels-number", dest="kernel_number", action=eval_action, default=[16, 8, 8])
-parser.add_argument("-ks", "--kernel-shape", dest="kernel_shape", action=eval_action, default=[[3, 3], [3, 3], [3, 3]])
-parser.add_argument("-mp", "--max-pool-shape", dest="m_pool", action=eval_action, default=[[2, 2], [2, 2], [2, 2]])
-parser.add_argument("-s", "--strides", dest="strides", action=eval_action, default=[[1, 1], [1, 1], [1, 1]])
-parser.add_argument("-cwr", "--cnn-w-reg", dest="cnn_w_reg",
-                    default="None")  # in autoencoder va usato con eval("funz(parametri)")
-parser.add_argument("-cbr", "--cnn-b-reg", dest="cnn_b_reg", default="None")
-parser.add_argument("-car", "--cnn-act-reg", dest="cnn_a_reg", default="None")
-parser.add_argument("-cwc", "--cnn-w-constr", dest="cnn_w_constr", default="None")
-parser.add_argument("-cbc", "--cnn-b-constr", dest="cnn_b_constr", default="None")
-parser.add_argument("-ac", "--cnn-conv-activation", dest="cnn_conv_activation", default="tanh", choices=["tanh"])
+# parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
+# parser.add_argument("-is", "--cnn-input-shape", dest="cnn_input_shape", action=eval_action, default=[1, 129, 197])
+# parser.add_argument("-kn", "--kernels-number", dest="kernel_number", action=eval_action, default=[16, 8, 8])
+# parser.add_argument("-ks", "--kernel-shape", dest="kernel_shape", action=eval_action, default=[[3, 3], [3, 3], [3, 3]])
+# parser.add_argument("-mp", "--max-pool-shape", dest="m_pool", action=eval_action, default=[[2, 2], [2, 2], [2, 2]])
+# parser.add_argument("-s", "--strides", dest="strides", action=eval_action, default=[[1, 1], [1, 1], [1, 1]])
+# parser.add_argument("-cwr", "--cnn-w-reg", dest="cnn_w_reg",
+#                     default="None")  # in autoencoder va usato con eval("funz(parametri)")
+# parser.add_argument("-cbr", "--cnn-b-reg", dest="cnn_b_reg", default="None")
+# parser.add_argument("-car", "--cnn-act-reg", dest="cnn_a_reg", default="None")
+# parser.add_argument("-cwc", "--cnn-w-constr", dest="cnn_w_constr", default="None")
+# parser.add_argument("-cbc", "--cnn-b-constr", dest="cnn_b_constr", default="None")
+# parser.add_argument("-ac", "--cnn-conv-activation", dest="cnn_conv_activation", default="tanh", choices=["tanh"])
 #dense
 parser.add_argument("-dln", "--dense-layers-numb", dest="dense_layer_numb", default=1, type=int)
 parser.add_argument("-ds", "--dense-shapes", dest="dense_shapes", action=eval_action, default=[64])
-parser.add_argument("-i", "--cnn-init", dest="cnn_init", default="glorot_uniform", choices=["glorot_uniform"])
-parser.add_argument("-ad", "--cnn-dense-activation", dest="cnn_dense_activation", default="tanh", choices=["tanh"])
+parser.add_argument("-i", "--init", dest="init", default="glorot_uniform", choices=["glorot_uniform"])
+parser.add_argument("-ad", "--dense-activation", dest="dense_activation", default="tanh", choices=["tanh"])
 parser.add_argument("-bm", "--border-mode", dest="border_mode", default="same", choices=["valid", "same"])
 parser.add_argument("-dwr", "--d-w-reg", dest="d_w_reg",
                     default="None")  # in autoencoder va usato con eval("funz(parametri)")
@@ -160,13 +160,14 @@ st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
 print("experiment start in date: " + st0)
 
 root_dir = path.realpath('.')
-
+datasetPath = os.path.join(root_dir, 'dataset', args.input_type)
 
 # LOAD DATASET
-X_data, Y_data = dm.load_DATASET(root_dir, 'dataset', args.input_type)
+X_data, Y_data = dm.load_DATASET(datasetPath)
 
 #TODO DEF AUTOENCODER
-model = autoencoder.get_model()
+model = autoencoder.autoencoder_fall_detection(strID)
+model.define_sequential_arch(args)
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 

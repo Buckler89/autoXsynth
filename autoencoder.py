@@ -274,7 +274,7 @@ def plot_decoded_img(label, original, decoded_img, destSavePath):
     plt.ion()#turn on interactive mode
 
 class autoencoder_fall_detection:
-    def __init__(self, id_process, case, fold):
+    def __init__(self, id_process):
         """
 
         :param id: The id of the experiment. Is also the name of the logger that must be used!
@@ -496,8 +496,22 @@ class autoencoder_fall_detection:
 
         return self._autoencoder
 
-    def define_dense_arch(self, params):
+    def define_sequential_arch(self, params):
         input_img = Input(shape=params.input_shape)
+
+        for i in range(params.dense_layer_numb):
+            x = Dense(inputs[i],
+                      init=params.init,
+                      activation=params.dense_activation,
+                      W_regularizer=eval(params.d_w_reg),
+                      b_regularizer=eval(params.d_b_reg),
+                      activity_regularizer=eval(params.d_a_reg),
+                      W_constraint=eval(params.d_w_constr),
+                      b_constraint=eval(params.d_b_constr),
+                      bias=params.bias)(x)
+            print("dense[" + str(i) + "] -> (" + str(inputs[i]) + ")")
+            if (params.dropout):
+                x = Dropout(params.drop_rate)(x)
 
         return self._autoencoder
 
