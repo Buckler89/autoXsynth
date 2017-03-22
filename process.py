@@ -163,7 +163,7 @@ root_dir = path.realpath('.')
 datasetPath = os.path.join(root_dir, 'dataset', args.input_type)
 
 # LOAD DATASET
-X_data, Y_data = dm.load_DATASET(datasetPath)
+X_data, Y_data = dm.load_DATASET(datasetPath) #todo crea cartella dataset e piazzaci le stft e le mefcc. Poi caricale entrambe
 
 #TODO DEF AUTOENCODER
 model = autoencoder.autoencoder_fall_detection(strID)
