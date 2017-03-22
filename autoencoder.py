@@ -11,7 +11,7 @@ import os
 os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=gpu,floatX=float32"
 from keras.models import Model, load_model
 from keras.layers import Input, Dense, Dropout, Flatten, Reshape, Convolution2D, MaxPooling2D, UpSampling2D, \
-    ZeroPadding2D, Cropping2D
+    ZeroPadding2D, Cropping2D, Merge
 from keras.optimizers import Adam, Adadelta
 from keras.callbacks import Callback, ProgbarLogger, CSVLogger
 import numpy as np
@@ -274,7 +274,7 @@ def plot_decoded_img(label, original, decoded_img, destSavePath):
     plt.ion()#turn on interactive mode
 
 class autoencoder_fall_detection:
-    def __init__(self, id_process):
+    def __init__(self, id_process, case=None, fold=None):
         """
 
         :param id: The id of the experiment. Is also the name of the logger that must be used!
@@ -497,10 +497,11 @@ class autoencoder_fall_detection:
         return self._autoencoder
 
     def define_sequential_arch(self, params):
-        input_img = Input(shape=params.input_shape)
 
+        input_img = Input(shape=(params.dense_input_shape,))
+        x = input_img
         for i in range(params.dense_layer_numb):
-            x = Dense(inputs[i],
+            x = Dense(params.dense_shapes[i],
                       init=params.init,
                       activation=params.dense_activation,
                       W_regularizer=eval(params.d_w_reg),
@@ -509,10 +510,32 @@ class autoencoder_fall_detection:
                       W_constraint=eval(params.d_w_constr),
                       b_constraint=eval(params.d_b_constr),
                       bias=params.bias)(x)
-            print("dense[" + str(i) + "] -> (" + str(inputs[i]) + ")")
+            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
                 x = Dropout(params.drop_rate)(x)
 
+        # ---------------------------------------------------------- Decoding
+
+        for i in range(params.dense_layer_numb - 2, -1, -1):  # backwards indices last excluded
+            x = Dense(params.dense_shapes[i],
+                      init=params.init,
+                      activation=params.dense_activation,
+                      W_regularizer=eval(params.d_w_reg),
+                      b_regularizer=eval(params.d_b_reg),
+                      activity_regularizer=eval(params.d_a_reg),
+                      W_constraint=eval(params.d_w_constr),
+                      b_constraint=eval(params.d_b_constr),
+                      bias=params.bias)(x)
+            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
+            if (params.dropout):
+                x = Dropout(params.drop_rate)(x)#ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
+        mod = Dense(1025, activation='relu')(x)
+        cos = Dense(1025, activation='tanh')(x)
+        sin = Dense(1025, activation='tanh')(x)
+        f = Merge(mode='concat')([mod, cos, sin])
+        self._autoencoder = Model(input_img, f)
+        self._autoencoder.summary()
+        self._autoencoder.name = 'DenseAutoencoder'
         return self._autoencoder
 
     def model_compile(self, model=None, optimizer='adadelta', learning_rate=1.0, loss='mse'):
@@ -540,10 +563,8 @@ class autoencoder_fall_detection:
         return self._autoencoder
 
     def model_fit(self, x_train, y_train, x_dev=None, y_dev=None, validation_split=0.0 ,nb_epoch=50, batch_size=128, shuffle=True, model=None,
-                  fit_net=True, patiance=20, aucMinImprovment=0.01, logPath='log', nameFileLogCsv='losses.csv'):#TODO inserire logPath come argomento nel parser!!!
+                  fit_net=True, patiance=20, nameFileLogCsv='losses.csv'):
         print("model_fit")
-        if nameFileLogCsv is None:
-            nameFileLogCsv = 'losses.csv'
 
         if model is not None:
             self._autoencoder = model
@@ -552,37 +573,21 @@ class autoencoder_fall_detection:
             self.load_model('my_model.h5')
 
         else:
-            epochScorePath = os.path.join(logPath, 'epochs_score', 'process_'+self._id)
-            u.makedir(epochScorePath)
-            csv_logger = CSVLogger(os.path.join(epochScorePath, 'lossesProcess_'+str(self._fold)+'.csv'))
 
-            if x_dev is not None and y_dev is not None:  # se ho a disposizione un validation set allora faccio anche l'early stopping
-                earlyStoppingAuc = EarlyStoppingAuc(self.__class__,  # devo passargli la classe stessa perche poi
-                                                    # dalla classe EarlyStoppingAuc ho bisogno di chiamare
-                                                    # reconstruct_spectrogram che ha bisogno del self! #TODO c'è un modo miglore?
-                                                    train_labels=y_train,
-                                                    validation_data=x_dev,
-                                                    validation_data_label=y_dev,
-                                                    aucMinImprovment=aucMinImprovment,
-                                                    patience=patiance,
-                                                    pathSaveFig=os.path.join('imgForGif', self._case, 'fold_'+self._fold))
+            csv_logger = CSVLogger(nameFileLogCsv)
 
-                self._autoencoder.fit(x_train, x_train,
+            if x_dev is not None and y_dev is not None or validation_split > 0.0:  # se ho a disposizione un validation set allora faccio anche l'early stopping
+
+                self._autoencoder.fit(x_train, y_train,
                                       nb_epoch=nb_epoch,
                                       validation_split=validation_split,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
-                                      callbacks=[earlyStoppingAuc, csv_logger],
+                                      callbacks=[csv_logger],
                                       verbose=1)  # with a value != 1 ProbarLogging is not called
-                # print(str(earlyStoppingAuc.losses))
-                # print(str(earlyStoppingAuc.aucs))
-                print('losses: {}, \naucs: {},'.format(earlyStoppingAuc.losses, earlyStoppingAuc.aucs))
-
-                np.savetxt(os.path.join(epochScorePath, 'aucProcess_'+str(self._fold)+'.csv'), earlyStoppingAuc.aucs) #save the auc in file for further analisys
-                self._autoencoder = earlyStoppingAuc.bestmodel
 
             else:
-                self._autoencoder.fit(x_train, x_train,
+                self._autoencoder.fit(x_train, y_train,
                                       nb_epoch=nb_epoch,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
@@ -664,96 +669,6 @@ class autoencoder_fall_detection:
     #     ax.get_xaxis().set_visible(False)
     #     ax.get_yaxis().set_visible(False)
     #     plt.show()
-
-
-
-
-class EarlyStoppingAuc(Callback):
-    def __init__(self, net, train_labels, validation_data, validation_data_label, aucMinImprovment=0.01, patience=20, pathSaveFig='imgForGif'):
-        super(Callback, self).__init__()
-        self.net = net
-        self.train_labels = train_labels
-        self.val_data = validation_data
-        self.val_data_lab = validation_data_label
-        self.aucMinImprovment = aucMinImprovment
-        self.patiance = patience + 1  # il +1 serve per considerare che alla prima epoca non si ha sicuramente un improvment (perchè usao self.auc[-1])
-        self.actualPatiance = self.patiance
-        self.bestmodel = None
-        self.pathSaveFig = pathSaveFig #TODO inserire come argomento nel parser
-        u.makedir(pathSaveFig)
-
-    def on_train_begin(self, logs={}):
-        print('---------------------Train beging----------------')
-
-        self.aucs = []
-        self.losses = []
-
-        print("EPOCH -1 :")
-
-        decoded_images = autoencoder_fall_detection.reconstruct_spectrogram(self.net,
-                                                                            x_test=self.val_data,
-                                                                            model=self.model)
-
-        epoch_auc, _, _, _, _ = compute_score(self.val_data,
-                                              decoded_images,
-                                              self.val_data_lab)
-        self.aucs.append(epoch_auc)
-
-        print("Epoch -1 auc:" + str(epoch_auc))
-
-        #TODO mettere un parametro nel parser che abilita il salvataggio delle figure ( solo a scopo di debug)
-        # pathSaveFigName = os.path.join(self.pathSaveFig, 'img-1.png')
-        # plot_decoded_img(self.val_data_lab[11], self.val_data[11], decoded_images[11], pathSaveFigName)
-
-    # def on_batch_end(self, batch, logs=None):
-    #     #ProgbarLogger()
-    #     #print('epoch: {}, logs: {}'.format(batch, logs))
-    #     pass
-
-    def on_epoch_begin(self, epoch, logs=None):
-        print('---------------------Epoch {}----------------'.format(str(epoch)))
-
-    def on_epoch_end(self, epoch, logs={}):
-
-        self.losses.append(logs.get('loss'))
-        print('')
-        decoded_images = autoencoder_fall_detection.reconstruct_spectrogram(self.net,
-                                                                            x_test=self.val_data,
-                                                                            model=self.model)
-        epoch_auc, _, _, _, _ = compute_score(self.val_data,
-                                              decoded_images,
-                                              self.val_data_lab)
-
-        #TODO mettere un parametro nel parser che abilita il salvataggio delle figure ( solo a scopo di debug)
-
-        # pathSaveFigName = os.path.join(self.pathSaveFig, 'img_{:04d}.png'.format(epoch))
-        # plot_decoded_img(self.val_data_lab[11], self.val_data[11], decoded_images[11], pathSaveFigName)
-
-        self.aucs.append(epoch_auc)
-
-        print('Epoch: {}, logs: {}, auc: {}'.format(epoch, logs, epoch_auc))
-
-        if epoch is 0: # if is the first epoch the first model is the best model
-            self.bestmodel = self.model
-            self.bestmodel.name = 'bestModelEpoch{}'.format(epoch)
-            self.best_auc = epoch_auc
-
-        if (epoch_auc - self.best_auc) <= self.aucMinImprovment:  # if the last auc differance of the actual epoch and the last auc is less then a threshold
-            print('No improvment for auc')
-            self.actualPatiance -= 1
-            print('Remaining patiance: {}'.format(self.actualPatiance))
-            if self.actualPatiance is 0:
-                print('Patience finished: STOP FITTING')
-                self.model.stop_training = True
-        else:
-            self.best_auc = epoch_auc
-            self.actualPatiance = self.patiance  # if the model improves, reset the patiance
-            self.bestmodel = self.model  # and the new best model is the actual model
-            self.bestmodel.name = 'bestModelEpoch{}'.format(epoch)
-
-        print('---------------------Epoch {} end----------------'.format(str(epoch)))
-
-        return
 
 
 

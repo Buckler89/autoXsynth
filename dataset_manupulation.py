@@ -46,24 +46,33 @@ def awgn_padding_set(set_to_pad, loc=0.0, scale=1.0):
     return awgn_padded_set
 
 
-def reshape_set(set_to_reshape, channels=1):
+def reshape_set(set_to_reshape, net_type, channels=1):
     """
     reshape the data in a form that keras want:
         -for theano dim ordering: (nsample, channel, row ,col)
         -for tensorflow not supported yet
         -other not specified yet
     :param set_to_reshape:
+    :param net_type: is the first type of layer used in the model
     :param channels:
     :return:
     """
     print("reshape_set")
-    n_sample = len(set_to_reshape)
-    row, col = set_to_reshape[0][1].shape
-    label = []
-    shaped_matrix = np.empty((n_sample, channels, row, col))
-    for i in range(len(set_to_reshape)):
-        label.append(set_to_reshape[i][0])
-        shaped_matrix[i][0] = set_to_reshape[i][1]
+
+    if net_type is 'convolutional2d':
+        n_sample = len(set_to_reshape)
+        row, col = set_to_reshape[0][1].shape
+        label = []
+        shaped_matrix = np.empty((n_sample, channels, row, col))
+        for i in range(len(set_to_reshape)):
+            label.append(set_to_reshape[i][0])
+            shaped_matrix[i][0] = set_to_reshape[i][1]
+
+    if net_type is 'dense':
+        n_sample = len(set_to_reshape)
+        row, col = set_to_reshape[0][1].shape
+        label = []
+
     return shaped_matrix, label
 
 

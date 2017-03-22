@@ -5,7 +5,7 @@ import librosa
 
 class AudioFeatures:
 
-    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels='20'):
+    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20):
         self.n_fft = n_fft
         self.feature = feature
         self.win_len = win_len
@@ -55,7 +55,8 @@ class AudioFeatures:
             if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
                 print ("This file exists. Skipping!")
             else:
-                audio, sample_rate = sf.read(filename, dtype=np.float32)
+                #audio, sample_rate = sf.read(filename, dtype=np.float32)
+                audio, sample_rate = librosa.core.load(filename, dtype=np.float32)
 
                 if self.feature == 'stft':
                     y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
