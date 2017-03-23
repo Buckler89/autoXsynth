@@ -517,23 +517,35 @@ class autoencoder_fall_detection:
         # ---------------------------------------------------------- Decoding
 
         for i in range(params.dense_layer_numb - 2, -1, -1):  # backwards indices last excluded
-            x = Dense(params.dense_shapes[i],
-                      init=params.init,
-                      activation=params.dense_activation,
-                      W_regularizer=eval(params.d_w_reg),
-                      b_regularizer=eval(params.d_b_reg),
-                      activity_regularizer=eval(params.d_a_reg),
-                      W_constraint=eval(params.d_w_constr),
-                      b_constraint=eval(params.d_b_constr),
-                      bias=params.bias)(x)
+
+            if i == 0:        #last dence with linear activation
+                x = Dense(params.dense_shapes[i],
+                          init=params.init,
+                          activation='linear',
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+
+            else:
+                x = Dense(params.dense_shapes[i],
+                          init=params.init,
+                          activation=params.dense_activation,
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
             print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
                 x = Dropout(params.drop_rate)(x)#ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
-        mod = Dense(1025, activation='relu')(x)
-        cos = Dense(1025, activation='tanh')(x)
-        sin = Dense(1025, activation='tanh')(x)
-        f = Merge(mode='concat')([mod, cos, sin])
-        self._autoencoder = Model(input_img, f)
+
+
+        decoded = x
+        self._autoencoder = Model(input_img, decoded)
         self._autoencoder.summary()
         self._autoencoder.name = 'DenseAutoencoder'
         return self._autoencoder

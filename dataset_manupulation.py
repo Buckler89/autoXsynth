@@ -69,9 +69,14 @@ def reshape_set(set_to_reshape, net_type, channels=1):
             shaped_matrix[i][0] = set_to_reshape[i][1]
 
     if net_type is 'dense':
-        n_sample = len(set_to_reshape)
-        row, col = set_to_reshape[0][1].shape
+        #n_sample = len(set_to_reshape)
+        #row, col = set_to_reshape[0][1].shape
         label = []
+        featSize = set_to_reshape[0][1].shape[0]
+        shaped_matrix = np.empty([1, featSize])
+        for sample in (set_to_reshape):
+            shaped_matrix = np.vstack([shaped_matrix, sample[1].T])
+        shaped_matrix = np.delete(shaped_matrix, 0, 0)
 
     return shaped_matrix, label
 

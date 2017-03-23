@@ -51,6 +51,10 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
+sr = 22050
+hops = 1024
+nfft = 2048
+
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
 # parser.add_argument("-is", "--cnn-input-shape", dest="cnn_input_shape", action=eval_action, default=[1, 129, 197])
@@ -163,14 +167,12 @@ print("experiment start in date: " + st0)
 
 root_dir = path.realpath('.')
 trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
-trainMfccPath = os.path.join(root_dir, 'dataset', 'train', args.target_type)
 
 
 # LOAD DATASET
 X_data = dm.load_DATASET(trainStftPath)
-Y_data = dm.load_DATASET(trainMfccPath)
 #todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
-
+X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 
 #model definition
 model = autoencoder.autoencoder_fall_detection(strID)
@@ -179,43 +181,23 @@ model.define_sequential_arch(args)
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
 
-mod_factor = 4 #todo spostare nel parser
-log_Y_data = np.log(Y_data)
-mod_Y_data = np.exp(np.real(log_Y_data))  # stft module of the train data
-scaler = mod_factor / np.max(mod_Y_data)
-scaled_mod_Y_data = mod_Y_data * scaler
-phi_Y_data = np.imag(log_Y_data)
-cos_phi_Y_data = np.cos(phi_Y_data)  # stft real part of the train data
-sin_phi_Y_data = np.sin(phi_Y_data)  # stft imaginary part of the train data
-Y_final_data = np.hstack(
-    [mod_Y_data.T, cos_phi_Y_data.T, sin_phi_Y_data.T])  # all the data concatenate as a single vector
 
 #model fit
-m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=args.epoch,
+m = model.model_fit(X_data_reshaped[0], X_data_reshaped[0], validation_split=args.val_split, nb_epoch=args.epoch,
                   batch_size=args.batch_size, shuffle=args.shuffle,
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
 
+
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
-sourceMfccPath = os.path.join(root_dir, 'dataset', 'source', args.target_type)
 
 source_stft = dm.load_DATASET(sourceStftPath)
-source_mfcc = dm.load_DATASET(sourceMfccPath)
-#todo reshape source_stft e source_mfcc
-prediction = model.predict(source_mfcc.T)
+#todo reshape source_stft
+source = dm.reshape_set(source_stft, net_type='dense')
+source_real = source[0].T.view().T
+source_real.dtype = "float32"
+prediction = model.reconstruct_spectrogram(source_real)
 
-mod = prediction[:, 0:1025]
-cos_phi = prediction[:, 1025:2050]
-sin_phi = prediction[:, 2050:3075]
+S = librosa.core.istft(prediction, hop_length=hops, win_length=nfft)
+librosa.output.write_wav("./reconstructionAAAA.wav", S, sr)
 
-cphase = cos_phi + 1j * sin_phi
-model_output = mod * cphase
-
-sr = 22050
-hops = 1024
-nfft = 2048
-S = librosa.core.istft(model_output.T, hop_length=hops, win_length=nfft)
-librosa.output.write_wav("./reconstruction.wav", S, sr)
-
-Ss = librosa.core.istft(source_stft, hop_length=hops, win_length=nfft)
-librosa.output.write_wav("./original.wav", Ss, sr)
