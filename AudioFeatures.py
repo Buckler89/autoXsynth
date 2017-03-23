@@ -56,7 +56,7 @@ class AudioFeatures:
                 print ("This file exists. Skipping!")
             else:
                 #audio, sample_rate = sf.read(filename, dtype=np.float32)
-                audio, sample_rate = librosa.core.load(filename, dtype=np.float32)
+                audio, sample_rate = librosa.core.load(filename, dtype=np.float32) #stereo sound to mono
 
                 if self.feature == 'stft':
                     y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
