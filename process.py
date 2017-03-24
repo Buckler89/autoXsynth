@@ -205,5 +205,6 @@ prediction_CAST = copy.deepcopy(prediction)
 prediction_CAST.dtype = "complex64"
 
 S = librosa.core.istft(prediction_CAST.T, hop_length=hops, win_length=nfft)
-librosa.output.write_wav("./reconstructionAAAA.wav", S, sr)
+out_filename = "reconstruction_" + strID + ".wav"
+librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
 
