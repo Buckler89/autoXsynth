@@ -1,8 +1,9 @@
 from AudioFeatures import *
 
-audio_files_path = 'Beethoven-wav/BeethovenPianoSonata13'
+audio_files_path = 'dataset/vox'
+HOP = 1024
+FTBINS = 4096
 
-test = AudioFeatures(feature='mfcc', n_fft=2048, path=audio_files_path, extension='ogg')
-A = test.scan_folder()
+test = AudioFeatures(feature='stft', n_fft=FTBINS, hop=HOP, path=audio_files_path, extension='.wav')
 
 B = test.feat_extract()

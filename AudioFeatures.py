@@ -1,5 +1,4 @@
 import os
-import soundfile as sf
 import numpy as np
 import librosa
 
@@ -31,10 +30,11 @@ class AudioFeatures:
         if not os.path.isdir('./' + self.path):
             print("This is not a directory!")
         else:
-            for i in range(0, len(os.listdir('./' + self.path))):
-                if os.listdir('./' + self.path)[i].find('.' + self.extension) != -1:
-                    samples.append('./' + self.path + '/' + os.listdir('./' + self.path)[i])
-
+            for root, dirnames, filenames in os.walk('./' + self.path):
+                for file in filenames:
+                    ext = os.path.splitext(file)[-1].lower()
+                    if ext == self.extension:
+                        samples.append(os.path.join(root, file))
         if len(samples) == 0:
             print ("NO FILES FOUND!")
         else:
@@ -55,7 +55,6 @@ class AudioFeatures:
             if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
                 print ("This file exists. Skipping!")
             else:
-                #audio, sample_rate = sf.read(filename, dtype=np.float32)
                 audio, sample_rate = librosa.core.load(filename, dtype=np.float32) #stereo sound to mono
 
                 if self.feature == 'stft':
