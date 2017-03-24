@@ -21,8 +21,9 @@ import time
 import datetime
 import utility as u
 import librosa
+import copy
 ###################################################PARSER ARGUMENT SECTION########################################
-parser = argparse.ArgumentParser(description="Novelty Deep Fall Detection")
+parser = argparse.ArgumentParser(description="AutoXSynthesis Autoencoder")
 
 
 class eval_action(argparse.Action):
@@ -173,17 +174,17 @@ trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
 X_data = dm.load_DATASET(trainStftPath)
 #todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
-
+X_data_reshaped = X_data_reshaped[0].T.view().T
+X_data_reshaped.dtype = 'float32'
+args.dense_input_shape = X_data_reshaped.shape[1]
 #model definition
 model = autoencoder.autoencoder_fall_detection(strID)
 model.define_sequential_arch(args)
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
-
-
 #model fit
-m = model.model_fit(X_data_reshaped[0], X_data_reshaped[0], validation_split=args.val_split, nb_epoch=args.epoch,
+m = model.model_fit(X_data_reshaped, X_data_reshaped, validation_split=args.val_split, nb_epoch=args.epoch,
                   batch_size=args.batch_size, shuffle=args.shuffle,
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
@@ -195,9 +196,14 @@ source_stft = dm.load_DATASET(sourceStftPath)
 #todo reshape source_stft
 source = dm.reshape_set(source_stft, net_type='dense')
 source_real = source[0].T.view().T
-source_real.dtype = "float32"
-prediction = model.reconstruct_spectrogram(source_real)
+source_real_CAST = copy.deepcopy(source_real)
+source_real_CAST.dtype = 'float32'
+prediction = np.asarray(model.reconstruct_spectrogram(source_real_CAST), order="C")
 
-S = librosa.core.istft(prediction, hop_length=hops, win_length=nfft)
+prediction = prediction.view()
+prediction_CAST = copy.deepcopy(prediction)
+prediction_CAST.dtype = "complex64"
+
+S = librosa.core.istft(prediction_CAST.T, hop_length=hops, win_length=nfft)
 librosa.output.write_wav("./reconstructionAAAA.wav", S, sr)
 

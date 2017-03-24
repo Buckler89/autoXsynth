@@ -519,7 +519,7 @@ class autoencoder_fall_detection:
         for i in range(params.dense_layer_numb - 2, -1, -1):  # backwards indices last excluded
 
             if i == 0:        #last dence with linear activation
-                x = Dense(params.dense_shapes[i],
+                x = Dense(params.dense_input_shape,
                           init=params.init,
                           activation='linear',
                           W_regularizer=eval(params.d_w_reg),

@@ -33,7 +33,7 @@ class StreamToLogger(object):
 
 
 # utility function
-def makedir(path):  # se esiste già non fa nulla e salta l'exceprtion
+def makedir(path):  # se esiste gia non fa nulla e salta l'exceprtion
     """
     Make dir only is it doesn't exist yet
     :param path: path to the folder that is to be created

@@ -1,6 +1,6 @@
 from AudioFeatures import *
 
-audio_files_path = 'dataset/vox'
+audio_files_path = 'dataset/'
 HOP = 1024
 FTBINS = 4096
 
