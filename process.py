@@ -39,6 +39,7 @@ class eval_action(argparse.Action):
 
 # Global params
 parser.add_argument("-id", "--exp-index", dest="id", default=0, type=int)
+parser.add_argument("-root", "--root-dir",dest="root_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
 
 parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
@@ -52,9 +53,9 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
-sr = 22050
+sr = 44100
 hops = 1024
-nfft = 2048
+nfft = 4096
 
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
@@ -125,7 +126,8 @@ if args.config_filename is not None:
 strID = str(args.id)
 
 print("init log")
-baseResultPath = 'result';
+root_dir = path.realpath(args.root_dir)
+baseResultPath = os.path.join(root_dir,'result')
 logFolder = os.path.join(baseResultPath, 'logs')
 csvFolder = os.path.join(baseResultPath, 'csv')
 wavDestPath = os.path.join(baseResultPath, 'reconstructedWav')
@@ -166,7 +168,6 @@ ts0 = time.time()
 st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
 print("experiment start in date: " + st0)
 
-root_dir = path.realpath('.')
 trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
 
 
@@ -174,7 +175,8 @@ trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
 X_data = dm.load_DATASET(trainStftPath)
 #todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
-X_data_reshaped = X_data_reshaped[0].T.view().T
+X_data_reshaped = X_data_reshaped[0].astype("complex64")
+X_data_reshaped = X_data_reshaped.T.view().T
 X_data_reshaped.dtype = 'float32'
 args.dense_input_shape = X_data_reshaped.shape[1]
 #model definition
@@ -195,7 +197,8 @@ sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
 source_stft = dm.load_DATASET(sourceStftPath)
 #todo reshape source_stft
 source = dm.reshape_set(source_stft, net_type='dense')
-source_real = source[0].T.view().T
+source_real = source[0].astype("complex64")
+source_real = source_real.T.view().T
 source_real_CAST = copy.deepcopy(source_real)
 source_real_CAST.dtype = 'float32'
 prediction = np.asarray(model.reconstruct_spectrogram(source_real_CAST), order="C")
@@ -207,4 +210,10 @@ prediction_CAST.dtype = "complex64"
 S = librosa.core.istft(prediction_CAST.T, hop_length=hops, win_length=nfft)
 out_filename = "reconstruction_" + strID + ".wav"
 librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
+
+ts1 = time.time()
+tot_time = (ts1-ts0)/60
+
+print "Experiment emplased " +str(tot_time)+ " minutes."
+print "END."
 

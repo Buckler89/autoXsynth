@@ -596,7 +596,7 @@ class autoencoder_fall_detection:
                                       batch_size=batch_size,
                                       shuffle=shuffle,
                                       callbacks=[csv_logger],
-                                      verbose=1)  # with a value != 1 ProbarLogging is not called
+                                      verbose=2)  # with a value != 1 ProbarLogging is not called
 
             else:
                 self._autoencoder.fit(x_train, y_train,
