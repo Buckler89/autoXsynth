@@ -76,7 +76,7 @@ parser.add_argument("-is", "--dense-input-shape", dest="dense_input_shape", defa
 parser.add_argument("-dln", "--dense-layers-numb", dest="dense_layer_numb", default=1, type=int)
 parser.add_argument("-ds", "--dense-shapes", dest="dense_shapes", action=eval_action, default=[64])
 parser.add_argument("-i", "--init", dest="init", default="glorot_uniform", choices=["glorot_uniform"])
-parser.add_argument("-ad", "--dense-activation", dest="dense_activation", default="tanh", choices=["tanh"])
+parser.add_argument("-ad", "--dense-activation", dest="dense_activation", default="tanh", choices=["tanh","relu"])
 parser.add_argument("-bm", "--border-mode", dest="border_mode", default="same", choices=["valid", "same"])
 parser.add_argument("-dwr", "--d-w-reg", dest="d_w_reg",
                     default="None")  # in autoencoder va usato con eval("funz(parametri)")
