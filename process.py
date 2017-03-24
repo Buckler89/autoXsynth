@@ -53,7 +53,7 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
-sr = 44100
+sr = 22050
 hops = 1024
 nfft = 4096
 
@@ -214,6 +214,6 @@ librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
 ts1 = time.time()
 tot_time = (ts1-ts0)/60
 
-print "Experiment emplased " +str(tot_time)+ " minutes."
+print "Experiment emplased " +str(tot_time) + " minutes."
 print "END."
 
