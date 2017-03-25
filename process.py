@@ -53,7 +53,7 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
-sr = 44100
+sr = 22050
 hops = 1024
 nfft = 4096
 
