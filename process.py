@@ -175,8 +175,7 @@ trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
 X_data = dm.load_DATASET(trainStftPath)
 #todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
-X_data_reshaped = X_data_reshaped[0].astype("complex64")
-X_data_reshaped = X_data_reshaped.T.view().T
+X_data_reshaped = X_data_reshaped[0].T.view().T
 X_data_reshaped.dtype = 'float32'
 args.dense_input_shape = X_data_reshaped.shape[1]
 #model definition
@@ -197,14 +196,11 @@ sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
 source_stft = dm.load_DATASET(sourceStftPath)
 #todo reshape source_stft
 source = dm.reshape_set(source_stft, net_type='dense')
-source_real = source[0].astype("complex64")
-source_real = source_real.T.view().T
-source_real_CAST = copy.deepcopy(source_real)
-source_real_CAST.dtype = 'float32'
-prediction = np.asarray(model.reconstruct_spectrogram(source_real_CAST), order="C")
+source_real = source[0].T.view().T
+source_real.dtype = 'float32'
+prediction = np.asarray(model.reconstruct_spectrogram(source_real), order="C")
 
-prediction = prediction.view()
-prediction_CAST = copy.deepcopy(prediction)
+prediction_CAST = prediction.view()
 prediction_CAST.dtype = "complex64"
 
 S = librosa.core.istft(prediction_CAST.T, hop_length=hops, win_length=nfft)
