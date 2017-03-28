@@ -7,7 +7,7 @@ Created on Thu Jan 19 15:11:09 2017
 """
 import numpy as np
 
-np.random.seed(888)  # for experiment repetibility: this goes here, before importing keras (inside autoencoder modele) It works?
+np.random.seed(888)  # for experiment repeatability: this goes here, before importing keras (inside autoencoder modele) It works?
 import autoencoder
 import dataset_manupulation as dm
 
@@ -210,6 +210,6 @@ librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
 ts1 = time.time()
 tot_time = (ts1-ts0)/60
 
-print "Experiment emplased " +str(tot_time) + " minutes."
-print "END."
+print("Experiment emplased " +str(tot_time) + " minutes.")
+print("END.")
 

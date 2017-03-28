@@ -54,7 +54,7 @@ class AudioFeatures:
 
         for filename in tqdm(samples_list):
             feat_name = os.path.basename(filename)[0:-4] + ".npy"
-            print "Extracting feature " + self.feature + " from file: " + filename
+            print("Extracting feature " + self.feature + " from file: " + filename)
             if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
                 print ("This file exists. Skipping!")
             else:

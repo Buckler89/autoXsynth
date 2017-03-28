@@ -4,3 +4,15 @@
 *.pyc
 
 Test\.py
+Beethoven-wav/
+__pycache__/
+args/
+autoXsynth_joblib/
+csv/
+dataset/
+logs/
+reconstructedWav/
+reconstructionAAAA.wav
+result/
+voice_check.wav
+waves/
