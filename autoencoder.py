@@ -500,7 +500,7 @@ class autoencoder_fall_detection:
 
         input_img = Input(shape=(params.dense_input_shape,))
         x = input_img
-        for i in range(params.dense_layer_numb):
+        for i in range(len(params.dense_shapes)):
             x = Dense(params.dense_shapes[i],
                       init=params.init,
                       activation=params.dense_activation,
@@ -516,7 +516,7 @@ class autoencoder_fall_detection:
 
         # ---------------------------------------------------------- Decoding
 
-        for i in range(params.dense_layer_numb - 2, -1, -1):  # backwards indices last excluded
+        for i in range(len(params.dense_shapes) - 2, -1, -1):  # backwards indices last excluded
 
             if i == 0:        #last dence with linear activation
                 x = Dense(params.dense_input_shape,
