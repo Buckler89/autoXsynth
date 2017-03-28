@@ -50,7 +50,7 @@ parser.add_argument("-tln", "--test-list-names", dest="testNamesLists", action=e
                     default=["testset_1.lst", "testset_2.lst", "testset_3.lst", "testset_4.lst"])
 parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval_action,
                     default=["devset_1.lst", "devset_2.lst", "devset_3.lst", "devset_4.lst"])
-parser.add_argument("-it", "--input-type", dest="input_type", default="spectrograms")
+parser.add_argument("-it", "--input-type", dest="input_type", default="stft")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
 sr = 22050

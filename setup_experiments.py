@@ -282,6 +282,7 @@ for e in experiments:
               " --loss " + str(e.loss) + "\n" + \
               " --drop-rate " + str(e.drop_rate) + "\n" + \
               " --learning-rate " + str(e.learning_rate) + "\n"
+              " --validation-split " + str(e.valida) + "\n"
 
     if not e.shuffle:
         command += " --no-shuffle \n"
