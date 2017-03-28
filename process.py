@@ -93,14 +93,13 @@ parser.add_argument("-p", "--pool-type", dest="pool_type", default="all", choice
 # fit params
 parser.add_argument("-e", "--epoch", dest="epoch", default=50, type=int)
 parser.add_argument("-ns", "--no-shuffle", dest="shuffle", default=True, action="store_false")
-parser.add_argument("-bs", "--batch-size", dest="batch_size", default=128, type=int)
+parser.add_argument("-bs", "--batch-size-fract", dest="batch_size_fract", default=0.1, type=float)
 parser.add_argument("-f", "--fit-net", dest="fit_net", default=False, action="store_true")
 parser.add_argument("-o", "--optimizer", dest="optimizer", default="adadelta", choices=["adadelta", "adam", "sgd"])
 parser.add_argument("-l", "--loss", dest="loss", default="mse", choices=["mse", "msle"])
 parser.add_argument("-pt", "--patiance", dest="patiance", default=20, type=int)
-parser.add_argument("-ami", "--aucMinImp", dest="aucMinImprovment", default=0.01, type=float)
 parser.add_argument("-lr", "--learning-rate", dest="learning_rate", default=1.0, type=float)
-parser.add_argument("-vl", "--validation-split", dest="val_split", default=0.0, type=float) #TODO add validation_split at the generator script
+parser.add_argument("-vl", "--validation-split", dest="val_split", default=0.0, type=float)
 
 args = parser.parse_args()
 
@@ -178,6 +177,9 @@ X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 X_data_reshaped = X_data_reshaped[0].T.view().T
 X_data_reshaped.dtype = 'float32'
 args.dense_input_shape = X_data_reshaped.shape[1]
+# calcolo il batch size
+batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
+
 #model definition
 model = autoencoder.autoencoder_fall_detection(strID)
 model.define_sequential_arch(args)
@@ -186,7 +188,7 @@ model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args
 
 #model fit
 m = model.model_fit(X_data_reshaped, X_data_reshaped, validation_split=args.val_split, nb_epoch=args.epoch,
-                  batch_size=args.batch_size, shuffle=args.shuffle,
+                  batch_size=batch_size, shuffle=args.shuffle,
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
 
