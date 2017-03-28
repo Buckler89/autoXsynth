@@ -242,7 +242,7 @@ def random_search(args):
         e.learning_rate = 1 #gen_with_ties(1, 1, np.log10(args.learning_rate), "any", "loguniform", 10, False, False)[0]
         e.shuffle = np.random.choice(args.shuffle)
         e.bias = np.random.choice(args.bias)
-
+        e.val_split = args.val_split
 
         exp_list.append(e)
     return exp_list
@@ -266,7 +266,7 @@ elif args.search_strategy == "random":
 i=0
 for e in experiments:
     script_name = os.path.join(args.scriptPath, str(i).zfill(5) + "_audioXsynth.conf")
-    command = " --root-path " +''+ str(args.root_path)+ '' + "\n" + \
+    command = " --root-path " + str(args.root_path) + "\n" + \
               " --input-type " + str(args.input_type) + "\n" + \
               " --exp-index " + str(e.id) + "\n" + \
               " --dense-activation " + str(e.dense_activation) + "\n" + \
@@ -281,8 +281,8 @@ for e in experiments:
               " --optimizer " + str(e.optimizer) + "\n" + \
               " --loss " + str(e.loss) + "\n" + \
               " --drop-rate " + str(e.drop_rate) + "\n" + \
-              " --learning-rate " + str(e.learning_rate) + "\n"
-              " --validation-split " + str(e.valida) + "\n"
+              " --learning-rate " + str(e.learning_rate) + "\n" \
+              " --validation-split " + str(e.val_split) + "\n"
 
     if not e.shuffle:
         command += " --no-shuffle \n"

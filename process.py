@@ -39,7 +39,7 @@ class eval_action(argparse.Action):
 
 # Global params
 parser.add_argument("-id", "--exp-index", dest="id", default=0, type=int)
-parser.add_argument("-root", "--root-dir",dest="root_dir", default=".", type=str)
+parser.add_argument("-root", "--root-path",dest="root_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
 
 parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
