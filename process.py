@@ -53,9 +53,12 @@ parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval
 parser.add_argument("-it", "--input-type", dest="input_type", default="stft")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
+parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
+
 sr = 22050
 hops = 1024
 nfft = 4096
+
 
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
@@ -132,11 +135,13 @@ logFolder = os.path.join(baseResultPath, 'logs')
 csvFolder = os.path.join(baseResultPath, 'csv')
 wavDestPath = os.path.join(baseResultPath, 'reconstructedWav')
 argsFolder = os.path.join(baseResultPath, 'args')
+predFolder = os.path.join(baseResultPath, 'preds')
 
 u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(wavDestPath)
 u.makedir(argsFolder)
+u.makedir(predFolder)
 
 nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
 nameFileLogCsv = os.path.join(csvFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis
@@ -176,14 +181,31 @@ X_data = dm.load_DATASET(trainStftPath)
 #todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 X_data_reshaped = X_data_reshaped[0].T.view().T
-X_data_reshaped.dtype = 'float32'
+
+if args.hybrid_phase:
+    X_data_module = np.absolute(X_data_reshaped)
+    module_len = X_data_module.shape[1]
+    X_data_phase = np.angle(X_data_reshaped)
+    cos_phi_X_data = np.cos(X_data_phase)
+    sin_phi_X_data = np.sin(X_data_phase)
+
+    X_data_reshaped = np.hstack([X_data_module, cos_phi_X_data, sin_phi_X_data])
+    #X_data_reshaped = np.hstack([X_data_module, X_data_phase])
+
+else:
+    X_data_reshaped.dtype = 'float32'
+
+
 args.dense_input_shape = X_data_reshaped.shape[1]
 # calcolo il batch size
 batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
 
 #model definition
 model = autoencoder.autoencoder_fall_detection(strID)
-model.define_sequential_arch(args)
+if args.hybrid_phase:
+    model.define_sequential_arch_phase(args)
+else:
+    model.define_sequential_arch(args)
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
@@ -199,14 +221,43 @@ sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
 source_stft = dm.load_DATASET(sourceStftPath)
 #todo reshape source_stft
 source = dm.reshape_set(source_stft, net_type='dense')
-source_real = source[0].T.view().T
-source_real.dtype = 'float32'
-prediction = np.asarray(model.reconstruct_spectrogram(source_real), order="C")
+source_sig = source[0].T.view().T
 
-prediction_CAST = prediction.view()
-prediction_CAST.dtype = "complex64"
+if args.hybrid_phase:
+    source_sig_module = np.absolute(source_sig)
+    source_sig_phase = np.angle(source_sig)
+    cos_source_sig = np.cos(source_sig_phase)
+    sin_source_sig = np.sin(source_sig_phase)
 
-S = librosa.core.istft(prediction_CAST.T, hop_length=hops, win_length=nfft)
+    source_sig_input = np.hstack([source_sig_module, cos_source_sig, sin_source_sig])
+    #source_sig_input = np.hstack([source_sig_module, source_sig_phase])
+
+    prediction = np.asarray(model.reconstruct_spectrogram(source_sig_input), order="C")
+    pred_name = "prediction_" + strID
+    np.save(os.path.join(predFolder, pred_name), prediction)
+
+    prediction_module = prediction[:, 0:module_len]
+    prediction_cos = prediction[:, module_len:(module_len*2)]
+    prediction_sin = prediction[:, (module_len*2):(module_len*3)]
+    prediction_phase = prediction_cos + 1j * prediction_sin
+    #prediction_phase = prediction[:, module_len:]
+
+    #TODO ADD PARAMETRIC MIXING
+    #Mx = a1 * source_sig_module + a2 * prediction_module + ax * sqrt(source_sig_module * prediction_module)
+    #Phix = b1 * prediction_phase + b2 * source_sig_phase
+
+    Mx = prediction_module
+    Phix = source_sig_phase
+    #Phix = prediction_phase
+    #prediction_complex = Mx * np.exp(1j*Phix)
+    prediction_complex = Mx * Phix
+else:
+    source_sig.dtype = 'float32'
+    prediction = np.asarray(model.reconstruct_spectrogram(source_sig), order="C")
+    prediction_complex = prediction.view()
+    prediction_complex.dtype = "complex64"
+
+S = librosa.core.istft(prediction_complex.T, hop_length=hops, win_length=nfft)
 out_filename = "reconstruction_" + strID + ".wav"
 librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
 

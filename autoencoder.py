@@ -555,6 +555,81 @@ class autoencoder_fall_detection:
         self._autoencoder.name = 'DenseAutoencoder'
         return self._autoencoder
 
+    def define_sequential_arch_phase(self, params):
+
+        input_img = Input(shape=(params.dense_input_shape,))
+        x = input_img
+        for i in range(len(params.dense_shapes)):
+            x = Dense(params.dense_shapes[i],
+                      init=params.init,
+                      activation=params.dense_activation,
+                      W_regularizer=eval(params.d_w_reg),
+                      b_regularizer=eval(params.d_b_reg),
+                      activity_regularizer=eval(params.d_a_reg),
+                      W_constraint=eval(params.d_w_constr),
+                      b_constraint=eval(params.d_b_constr),
+                      bias=params.bias)(x)
+            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
+            if (params.dropout):
+                x = Dropout(params.drop_rate)(x)
+            if (params.batch_norm):
+                x = BatchNormalization(mode=1)(x)
+
+        # ---------------------------------------------------------- Decoding
+
+        for i in range(len(params.dense_shapes) - 2, -1, -1):  # backwards indices last excluded
+
+            if i == 0:        #last dence with linear activation
+                mod = Dense((params.dense_input_shape/3),
+                          init=params.init,
+                          activation='linear',
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+                cos = Dense((params.dense_input_shape/3),
+                          init=params.init,
+                          activation='linear',
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+                sin = Dense((params.dense_input_shape/3),
+                          init=params.init,
+                          activation='linear',
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+                x = Merge(mode='concat')([mod, cos, sin])
+            else:
+                x = Dense(params.dense_shapes[i],
+                          init=params.init,
+                          activation=params.dense_activation,
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+                if (params.batch_norm):
+                    x = BatchNormalization(mode=1)(x)
+            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
+            if (params.dropout):
+                x = Dropout(params.drop_rate)(x)
+        #ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
+        decoded = x
+        self._autoencoder = Model(input_img, decoded)
+        self._autoencoder.summary()
+        self._autoencoder.name = 'DenseAutoencoder'
+        return self._autoencoder
+
     def model_compile(self, model=None, optimizer='adadelta', learning_rate=1.0, loss='mse'):
         """
         compila il modello con i parametri passati: se non viene passato compila il modello istanziato dalla classe
