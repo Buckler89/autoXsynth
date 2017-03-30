@@ -89,6 +89,7 @@ parser.add_argument("-drpr", "--drop-rate", dest="drop_rate", default=0.5, type=
 
 parser.add_argument("-nb", "--no-bias", dest="bias", default=True, action="store_false")
 parser.add_argument("-p", "--pool-type", dest="pool_type", default="all", choices=["all", "only_end"])
+parser.add_argument("-bn", "--batch-norm", dest="batch_norm", default=False, action="store_true")
 
 # fit params
 parser.add_argument("-e", "--epoch", dest="epoch", default=50, type=int)

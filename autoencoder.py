@@ -11,7 +11,7 @@ import os
 os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=gpu,floatX=float32"
 from keras.models import Model, load_model
 from keras.layers import Input, Dense, Dropout, Flatten, Reshape, Convolution2D, MaxPooling2D, UpSampling2D, \
-    ZeroPadding2D, Cropping2D, Merge
+    ZeroPadding2D, Cropping2D, Merge, BatchNormalization
 from keras.optimizers import Adam, Adadelta
 from keras.callbacks import Callback, ProgbarLogger, CSVLogger
 import numpy as np
@@ -513,6 +513,8 @@ class autoencoder_fall_detection:
             print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
                 x = Dropout(params.drop_rate)(x)
+            if (params.batch_norm):
+                x = BatchNormalization(mode=1)(x)
 
         # ---------------------------------------------------------- Decoding
 
@@ -528,7 +530,6 @@ class autoencoder_fall_detection:
                           W_constraint=eval(params.d_w_constr),
                           b_constraint=eval(params.d_b_constr),
                           bias=params.bias)(x)
-
             else:
                 x = Dense(params.dense_shapes[i],
                           init=params.init,
@@ -539,9 +540,13 @@ class autoencoder_fall_detection:
                           W_constraint=eval(params.d_w_constr),
                           b_constraint=eval(params.d_b_constr),
                           bias=params.bias)(x)
+                if (params.batch_norm):
+                    x = BatchNormalization(mode=1)(x)
             print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
-                x = Dropout(params.drop_rate)(x)#ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
+                x = Dropout(params.drop_rate)(x)
+
+        #ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
 
 
         decoded = x
