@@ -247,7 +247,7 @@ if args.hybrid_phase:
     #Phix = b1 * prediction_phase + b2 * source_sig_phase
 
     Mx = prediction_module
-    Phix = source_sig_phase
+    Phix = cos_source_sig + 1j * sin_source_sig
     #Phix = prediction_phase
     #prediction_complex = Mx * np.exp(1j*Phix)
     prediction_complex = Mx * Phix
