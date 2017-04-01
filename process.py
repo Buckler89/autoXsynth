@@ -202,10 +202,10 @@ batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
 
 #model definition
 model = autoencoder.autoencoder_fall_detection(strID)
-if args.hybrid_phase:
-    model.define_sequential_arch_phase(args)
-else:
-    model.define_sequential_arch(args)
+# if args.hybrid_phase:
+#     model.define_sequential_arch_phase(args)
+# else:
+model.define_sequential_arch(args)
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 

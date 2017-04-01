@@ -532,7 +532,37 @@ class autoencoder_fall_detection:
                           bias=params.bias)(x)
                 if (params.batch_norm):
                     x = BatchNormalization(mode=1)(x)
-            else:#last dense with linear activation
+            # last dense with linear activation
+            elif params.hybrid_phase:
+                mod = Dense((int(params.dense_input_shape / 3)),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                cos = Dense((int(params.dense_input_shape / 3)),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                sin = Dense((int(params.dense_input_shape / 3)),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                x = Merge(mode='concat')([mod, cos, sin])
+            else:
                 x = Dense(params.dense_input_shape,
                           init=params.init,
                           activation='linear',
