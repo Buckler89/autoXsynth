@@ -545,7 +545,7 @@ class autoencoder_fall_detection:
                             bias=params.bias)(x)
                 cos = Dense((int(params.dense_input_shape / 3)),
                             init=params.init,
-                            activation='linear',
+                            activation='tanh',
                             W_regularizer=eval(params.d_w_reg),
                             b_regularizer=eval(params.d_b_reg),
                             activity_regularizer=eval(params.d_a_reg),
@@ -554,7 +554,7 @@ class autoencoder_fall_detection:
                             bias=params.bias)(x)
                 sin = Dense((int(params.dense_input_shape / 3)),
                             init=params.init,
-                            activation='linear',
+                            activation='tanh',
                             W_regularizer=eval(params.d_w_reg),
                             b_regularizer=eval(params.d_b_reg),
                             activity_regularizer=eval(params.d_a_reg),

@@ -105,6 +105,13 @@ parser.add_argument("-pt", "--patiance", dest="patiance", default=20, type=int)
 parser.add_argument("-lr", "--learning-rate", dest="learning_rate", default=1.0, type=float)
 parser.add_argument("-vl", "--validation-split", dest="val_split", default=0.0, type=float)
 
+#reconstruction param
+parser.add_argument("-aS", "--a-source", dest="aS", default=0.1, type=float)
+parser.add_argument("-aP", "--a-pred", dest="aP", default=0.9, type=float)
+parser.add_argument("-aM", "--a-mix", dest="aM", default=1, type=float)
+parser.add_argument("-bS", "--b-source", dest="bS", default=0.1, type=float)
+parser.add_argument("-bP", "--b-pred", dest="bP", default=0.9, type=float)
+
 args = parser.parse_args()
 
 if args.config_filename is not None:
@@ -242,15 +249,10 @@ if args.hybrid_phase:
     prediction_phase = prediction_cos + 1j * prediction_sin
     #prediction_phase = prediction[:, module_len:]
 
-    a1 = 0.4
-    a2 = 0.4
-    ax = 0.2
-    b1 = 0.5
-    b2 = 0.5
+
     #TODO ADD PARAMETRIC MIXING
-    Mx = a1 * source_sig_module + a2 * prediction_module# + ax * np.sqrt(source_sig_module * prediction_module)
-    sqrtax = ax * np.sqrt(source_sig_module * prediction_module)
-    Phix = b1 * prediction_phase + b2 * source_sig_phase
+    Mx = args.aS * source_sig_module + args.bP * prediction_module + args.aM * np.sqrt( source_sig_module * prediction_module)
+    Phix = args.bS * source_sig_phase + args.bP * prediction_phase
 
     # Mx = prediction_module
     # Phix = cos_source_sig + 1j * sin_source_sig
