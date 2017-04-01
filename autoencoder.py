@@ -536,7 +536,7 @@ class autoencoder_fall_detection:
             elif params.hybrid_phase:
                 mod = Dense((int(params.dense_input_shape / 3)),
                             init=params.init,
-                            activation='linear',
+                            activation='relu', # because the module is always positive
                             W_regularizer=eval(params.d_w_reg),
                             b_regularizer=eval(params.d_b_reg),
                             activity_regularizer=eval(params.d_a_reg),

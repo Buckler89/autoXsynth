@@ -242,14 +242,21 @@ if args.hybrid_phase:
     prediction_phase = prediction_cos + 1j * prediction_sin
     #prediction_phase = prediction[:, module_len:]
 
+    a1 = 0.4
+    a2 = 0.4
+    ax = 0.2
+    b1 = 0.5
+    b2 = 0.5
     #TODO ADD PARAMETRIC MIXING
-    #Mx = a1 * source_sig_module + a2 * prediction_module + ax * sqrt(source_sig_module * prediction_module)
-    #Phix = b1 * prediction_phase + b2 * source_sig_phase
+    Mx = a1 * source_sig_module + a2 * prediction_module# + ax * np.sqrt(source_sig_module * prediction_module)
+    sqrtax = ax * np.sqrt(source_sig_module * prediction_module)
+    Phix = b1 * prediction_phase + b2 * source_sig_phase
 
-    Mx = prediction_module
-    Phix = cos_source_sig + 1j * sin_source_sig
-    #Phix = prediction_phase
-    #prediction_complex = Mx * np.exp(1j*Phix)
+    # Mx = prediction_module
+    # Phix = cos_source_sig + 1j * sin_source_sig
+
+    # Phix = prediction_phase
+    # prediction_complex = Mx * np.exp(1j*Phix)
     prediction_complex = Mx * Phix
 else:
     source_sig.dtype = 'float32'
