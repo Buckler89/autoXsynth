@@ -520,17 +520,7 @@ class autoencoder_fall_detection:
 
         for i in range(len(params.dense_shapes) - 2, -1, -1):  # backwards indices last excluded
 
-            if i == 0:        #last dence with linear activation
-                x = Dense(params.dense_input_shape,
-                          init=params.init,
-                          activation='linear',
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
-                          activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
-            else:
+            if i is not 0:
                 x = Dense(params.dense_shapes[i],
                           init=params.init,
                           activation=params.dense_activation,
@@ -542,6 +532,17 @@ class autoencoder_fall_detection:
                           bias=params.bias)(x)
                 if (params.batch_norm):
                     x = BatchNormalization(mode=1)(x)
+            else:#last dense with linear activation
+                x = Dense(params.dense_input_shape,
+                          init=params.init,
+                          activation='linear',
+                          W_regularizer=eval(params.d_w_reg),
+                          b_regularizer=eval(params.d_b_reg),
+                          activity_regularizer=eval(params.d_a_reg),
+                          W_constraint=eval(params.d_w_constr),
+                          b_constraint=eval(params.d_b_constr),
+                          bias=params.bias)(x)
+
             print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
                 x = Dropout(params.drop_rate)(x)
@@ -579,36 +580,7 @@ class autoencoder_fall_detection:
 
         for i in range(len(params.dense_shapes) - 2, -1, -1):  # backwards indices last excluded
 
-            if i == 0:        #last dence with linear activation
-                mod = Dense((params.dense_input_shape/3),
-                          init=params.init,
-                          activation='linear',
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
-                          activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
-                cos = Dense((params.dense_input_shape/3),
-                          init=params.init,
-                          activation='linear',
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
-                          activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
-                sin = Dense((params.dense_input_shape/3),
-                          init=params.init,
-                          activation='linear',
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
-                          activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
-                x = Merge(mode='concat')([mod, cos, sin])
-            else:
+            if i is not 0:
                 x = Dense(params.dense_shapes[i],
                           init=params.init,
                           activation=params.dense_activation,
@@ -620,6 +592,36 @@ class autoencoder_fall_detection:
                           bias=params.bias)(x)
                 if (params.batch_norm):
                     x = BatchNormalization(mode=1)(x)
+
+            else:#last dense with linear activation
+                mod = Dense((params.dense_input_shape / 3),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                cos = Dense((params.dense_input_shape / 3),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                sin = Dense((params.dense_input_shape / 3),
+                            init=params.init,
+                            activation='linear',
+                            W_regularizer=eval(params.d_w_reg),
+                            b_regularizer=eval(params.d_b_reg),
+                            activity_regularizer=eval(params.d_a_reg),
+                            W_constraint=eval(params.d_w_constr),
+                            b_constraint=eval(params.d_b_constr),
+                            bias=params.bias)(x)
+                x = Merge(mode='concat')([mod, cos, sin])
             print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
             if (params.dropout):
                 x = Dropout(params.drop_rate)(x)
