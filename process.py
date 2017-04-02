@@ -105,12 +105,12 @@ parser.add_argument("-pt", "--patiance", dest="patiance", default=20, type=int)
 parser.add_argument("-lr", "--learning-rate", dest="learning_rate", default=1.0, type=float)
 parser.add_argument("-vl", "--validation-split", dest="val_split", default=0.0, type=float)
 
-#reconstruction param
+#mix reconstruction param
 parser.add_argument("-aS", "--a-source", dest="aS", default=0.1, type=float)
-parser.add_argument("-aP", "--a-pred", dest="aP", default=0.9, type=float)
+parser.add_argument("-aP", "--a-pred", dest="aP", default=None, type=float)
 parser.add_argument("-aM", "--a-mix", dest="aM", default=1, type=float)
 parser.add_argument("-bS", "--b-source", dest="bS", default=0.1, type=float)
-parser.add_argument("-bP", "--b-pred", dest="bP", default=0.9, type=float)
+parser.add_argument("-bP", "--b-pred", dest="bP", default=None, type=float)
 
 args = parser.parse_args()
 
@@ -127,6 +127,11 @@ if args.config_filename is not None:
     # in the config file and in the command line, the latter is used
     args = parser.parse_args(namespace=args)
 
+# set mix reconstruction params
+if args.aP is None:
+    args.aP = 1 - args.aS
+if args.bP is None:
+    args.bP = 1 - args.bS
 ###################################################END PARSER ARGUMENT SECTION########################################
 
 
