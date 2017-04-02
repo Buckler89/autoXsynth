@@ -47,7 +47,7 @@ class AudioFeatures:
 
     def feat_extract(self):
         samples_list = AudioFeatures.scan_folder(self)
-        feat_fold_name = os.path.join(self.path, self.feature)
+        feat_fold_name = os.path.join(self.path, self.feature + "-" + str(self.hop))
 
         if not os.path.isdir(feat_fold_name):
             os.makedirs(feat_fold_name)
