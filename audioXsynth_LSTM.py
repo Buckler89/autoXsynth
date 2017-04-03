@@ -13,7 +13,7 @@ import joblib
 import os
 import fnmatch
 import sys
-from keras.layers import Input, Dense
+from keras.layers import Input, Dense, LSTM
 from keras.models import Model
 
 #os.environ["PATH"]= os.environ["PATH"] + ":/usr/local/cuda/bin"
@@ -65,12 +65,12 @@ def compute_features(root_path, hop=512, ftbins=FTBINS, cqbins=CQBINS):
     return Fs, CQs
 
 
-def build_model(bins=CQBINS, activ='tanh'):
+def build_model(bins=CQBINS, activ='tanh', batch_size=2, timesteps=None):
     # this is the size of our encoded representations
     # encoding_dim = 80
 
     # this is our input placeholder
-    input_img = Input(shape=(bins,))
+    input_img = Input(shape=(timesteps, bins))
 
     # "encoded" is the encoded representation of the input
     encoded1 = Dense(1024, activation=activ)(input_img)
@@ -80,7 +80,7 @@ def build_model(bins=CQBINS, activ='tanh'):
     #encoded5 = Dense(1024, activation=activ)(encoded4)
 
     #ENCODED REPRESENTATION
-    bottleneck = Dense(80, activation=activ)(encoded3)
+    bottleneck = LSTM(80, activation=activ, return_sequences=True)(encoded3)
 
     # "decoded" is the lossy reconstruction of the input
     decoded1 = Dense(1024, activation=activ)(bottleneck)
@@ -114,9 +114,12 @@ if __name__ == "__main__":
     X_data_fft_real = X_data_fft.T.view().T
     X_data_fft_real.dtype = 'float32'
 
+    # reshape input to be [samples, time steps, features]
+    X_data_fft_real = np.reshape(X_data_fft_real, (X_data_fft_real.shape[1], 1, X_data_fft_real.shape[0]))
+
     print ("fitting model...")
     sys.stdout.flush()
-    model, middle_layer = build_model(bins=X_data_fft_real.shape[0])
+    model, middle_layer = build_model(bins=X_data_fft_real.shape[2], timesteps=X_data_fft_real.shape[0], batch_size=1)
     model.fit(X_data_fft_real.T, X_data_fft_real.T, batch_size=BSIZE, nb_epoch=EPOCHS)
 
     sys.stdout.flush()
@@ -136,26 +139,3 @@ if __name__ == "__main__":
 
     synthesised_direct_fft = librosa.core.istft(pcomplex, hop_length=HOP, win_length=FTBINS)
     librosa.output.write_wav("./voice_check.wav", synthesised_direct_fft, SR)
-
-    # pp = middle_layer.predict(X_data_fft_real.T)
-    # pp.shape
-    #
-    # cc = middle_layer.predict(F_real.T)
-    # cc_norms = np.linalg.norm(cc, axis=1)
-    # cc_normed = cc / cc_norms[:, np.newaxis]
-    # cc.shape
-    #
-    # pp_norms = np.linalg.norm(pp, axis=1)
-    # pp_normed = pp / pp_norms[:, np.newaxis]
-    #
-    # similarities = pp_normed.dot(cc_normed.T)
-    #
-    # frame_indices_for_synthesis = similarities.argmax(axis=0)
-    # frames_for_synthesis = X_data_fft[:, frame_indices_for_synthesis]
-    # frames_for_synthesis /= (np.linalg.norm(frames_for_synthesis, axis=0) + 1e-18)
-    # frames_for_synthesis *= np.linalg.norm(F, axis=0)
-    #
-    # synthesised = librosa.core.istft(frames_for_synthesis, hop_length=HOP, win_length=FTBINS)
-    # librosa.output.write_wav("./similarity_mapped.wav", synthesised, SR)
-    #
-    # np.isnan(synthesised).sum()
