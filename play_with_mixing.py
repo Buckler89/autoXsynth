@@ -4,23 +4,24 @@ import os
 import librosa
 import utility as u
 sr = 22050
-hops = 1024
+hops = 2048
 nfft = 4096
-aS = 0.1
+aS = 0.0
 aP = 1-aS
-aM = 1
-bS = 0.9
+aM = 0.0
+bS = 0.5
 bP = 1-bS
 
 root_path = os.getcwd()
 destFold = os.path.join(root_path,'mix_analysis')
 u.makedir(destFold)
-out_filename = os.path.join(destFold,"reconstructed_1.wav")
+id='221'
+out_filename = os.path.join(destFold,"reconstructed_"+id+"_P.wav")
 
-predictName = 'prediction_101.npy'
+predictName = "prediction_"+id+".npy"
 predicPathfile = os.path.join('result', 'preds', predictName)
 sourceName = 'Vox.npy'
-sourcePathfile = os.path.join('dataset','source', 'stft', sourceName)
+sourcePathfile = os.path.join('dataset','source', 'stft-2048', sourceName)
 
 source = np.load(sourcePathfile)
 predict = np.load(predicPathfile)
@@ -41,7 +42,7 @@ predict_sig_phase_ = cos_predict_sig + 1j * sin_predict_sig
 predict_sig_module = predict_sig_module_.T.view()#.T
 predict_sig_phase = predict_sig_phase_.T.view()#.T
 
-Mx = aS * source_sig_module + bP * predict_sig_module + aM * np.sqrt(source_sig_module * predict_sig_module)
+Mx = aS * source_sig_module + aP * predict_sig_module + aM * np.sqrt(source_sig_module * predict_sig_module)
 Phix = bS * source_sig_phase + bP * predict_sig_phase
 
 prediction_complex = Mx * Phix

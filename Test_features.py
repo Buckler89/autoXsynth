@@ -1,7 +1,7 @@
 from AudioFeatures import *
 
 audio_files_path = 'wavs/source/'
-HOP = 1024
+HOP = 2048
 FTBINS = 4096
 SR = 22050
 

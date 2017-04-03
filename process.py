@@ -56,7 +56,7 @@ parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 
 sr = 22050
-hops = 1024
+hops = 2048
 nfft = 4096
 
 
@@ -256,7 +256,7 @@ if args.hybrid_phase:
 
 
     #TODO ADD PARAMETRIC MIXING
-    Mx = args.aS * source_sig_module + args.bP * prediction_module + args.aM * np.sqrt( source_sig_module * prediction_module)
+    Mx = args.aS * source_sig_module + args.aP * prediction_module + args.aM * np.sqrt( source_sig_module * prediction_module)
     Phix = args.bS * source_sig_phase + args.bP * prediction_phase
 
     # Mx = prediction_module
