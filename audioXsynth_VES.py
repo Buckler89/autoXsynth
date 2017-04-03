@@ -4,18 +4,20 @@ Created on Fri Nov 25 15:25:10 2016
 
 @author: cella
 """
+import os
 import theano
+import matplotlib.pyplot as plt
 import numpy as np
 import librosa
 import joblib
 import os
 import fnmatch
 import sys
-from keras.layers import Input, Dense, SimpleRNN, LSTM
+from keras.layers import Input, Dense
 from keras.models import Model
 
-os.environ["PATH"]= os.environ["PATH"] + ":/usr/local/cuda/bin"
-os.environ["THEANO_FLAGS"]="device=gpu"
+#os.environ["PATH"]= os.environ["PATH"] + ":/usr/local/cuda/bin"
+#os.environ["THEANO_FLAGS"]="device=gpu"
 
 print(theano.config.device)
 print (os.environ["PATH"])
@@ -24,8 +26,7 @@ DATA_DIR = "wavs/source/"
 HOP = 1024
 FTBINS = 4096
 CQBINS = 80
-BSIZE = 128
-CONTEXT = 3
+BSIZE = 256
 EPOCHS = 300
 SOURCE_FILE = "wavs/vox/Vox.wav"
 SR = 44100
@@ -64,27 +65,27 @@ def compute_features(root_path, hop=512, ftbins=FTBINS, cqbins=CQBINS):
     return Fs, CQs
 
 
-def build_model(bins=CQBINS, activ='tanh', cont_size=1):
+def build_model(bins=CQBINS, activ='tanh'):
     # this is the size of our encoded representations
     # encoding_dim = 80
 
     # this is our input placeholder
-    input_img = Input(shape=(cont_size, bins))
+    input_img = Input(shape=(bins,))
 
     # "encoded" is the encoded representation of the input
-    encoded1 = Dense(2048, activation=activ)(input_img)
+    encoded1 = Dense(1024, activation=activ)(input_img)
     encoded2 = Dense(1024, activation=activ)(encoded1)
     encoded3 = Dense(1024, activation=activ)(encoded2)
     #encoded4 = Dense(1024, activation=activ)(encoded3)
     #encoded5 = Dense(1024, activation=activ)(encoded4)
 
     #ENCODED REPRESENTATION
-    bottleneck = LSTM(80, activation=activ, return_sequences=False)(encoded3)
+    bottleneck = Dense(80, activation=activ)(encoded3)
 
     # "decoded" is the lossy reconstruction of the input
     decoded1 = Dense(1024, activation=activ)(bottleneck)
     decoded2 = Dense(1024, activation=activ)(decoded1)
-    decoded3 = Dense(2048, activation=activ)(decoded2)
+    decoded3 = Dense(1024, activation=activ)(decoded2)
     #decoded4 = Dense(1024, activation=activ)(decoded3)
     #decoded5 = Dense(1024, activation=activ)(decoded4)
     output_AE = Dense(bins, activation='linear')(decoded3)
@@ -101,15 +102,6 @@ def build_model(bins=CQBINS, activ='tanh', cont_size=1):
 
     return autoencoder, middle_layer_model
 
-
-def create_context(dataset, look_back=1):
-    dataX, dataY = [], []
-    for i in range(len(dataset) - look_back - 1):
-        a = dataset[i:(i + look_back), :]
-        dataX.append(a)
-        dataY.append(dataset[i + look_back, :])
-    return np.array(dataX), np.array(dataY)
-
 if __name__ == "__main__":
 
     print ("Cross-synthesis with autoencoders");
@@ -122,14 +114,10 @@ if __name__ == "__main__":
     X_data_fft_real = X_data_fft.T.view().T
     X_data_fft_real.dtype = 'float32'
 
-    X_data_fft_shaped, Y_data_fft_shaped = create_context(X_data_fft_real.T, look_back=CONTEXT)
-    # reshape input to be [(batch_size, timesteps, input_dim)]
-    #X_data_fft_shaped = np.reshape(X_data_fft_real, (X_data_fft_real.shape[1], 1, X_data_fft_real.shape[0]))
-
     print ("fitting model...")
     sys.stdout.flush()
-    model, middle_layer = build_model(bins=X_data_fft_shaped.shape[2], cont_size=CONTEXT)
-    model.fit(X_data_fft_shaped, Y_data_fft_shaped, batch_size=BSIZE, nb_epoch=EPOCHS, verbose=1)
+    model, middle_layer = build_model(bins=X_data_fft_real.shape[0])
+    model.fit(X_data_fft_real.T, X_data_fft_real.T, batch_size=BSIZE, nb_epoch=EPOCHS)
 
     sys.stdout.flush()
 
@@ -138,12 +126,36 @@ if __name__ == "__main__":
 
     F_real = F.T.view().T
     F_real.dtype = "float32"
-    F_real_shaped, _ = create_context(F_real.T, look_back=CONTEXT)
-    #F_real = np.reshape(F_real, (F_real.shape[1], 3, F_real.shape[0]))
 
-    p = np.asarray(model.predict(F_real_shaped), order="C")
+    F_real.shape
+
+    p = np.asarray(model.predict(F_real.T[0:10000]), order="C")
     pcomplex = p.T.view()
     pcomplex.dtype = "complex64"
+    p.shape, pcomplex.shape
 
     synthesised_direct_fft = librosa.core.istft(pcomplex, hop_length=HOP, win_length=FTBINS)
-    librosa.output.write_wav("./voice_check2.wav", synthesised_direct_fft, SR)
+    librosa.output.write_wav("./voice_check.wav", synthesised_direct_fft, SR)
+
+    # pp = middle_layer.predict(X_data_fft_real.T)
+    # pp.shape
+    #
+    # cc = middle_layer.predict(F_real.T)
+    # cc_norms = np.linalg.norm(cc, axis=1)
+    # cc_normed = cc / cc_norms[:, np.newaxis]
+    # cc.shape
+    #
+    # pp_norms = np.linalg.norm(pp, axis=1)
+    # pp_normed = pp / pp_norms[:, np.newaxis]
+    #
+    # similarities = pp_normed.dot(cc_normed.T)
+    #
+    # frame_indices_for_synthesis = similarities.argmax(axis=0)
+    # frames_for_synthesis = X_data_fft[:, frame_indices_for_synthesis]
+    # frames_for_synthesis /= (np.linalg.norm(frames_for_synthesis, axis=0) + 1e-18)
+    # frames_for_synthesis *= np.linalg.norm(F, axis=0)
+    #
+    # synthesised = librosa.core.istft(frames_for_synthesis, hop_length=HOP, win_length=FTBINS)
+    # librosa.output.write_wav("./similarity_mapped.wav", synthesised, SR)
+    #
+    # np.isnan(synthesised).sum()
