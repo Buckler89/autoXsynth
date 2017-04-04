@@ -94,6 +94,11 @@ parser.add_argument("-nb", "--no-bias", dest="bias", default=True, action="store
 parser.add_argument("-p", "--pool-type", dest="pool_type", default="all", choices=["all", "only_end"])
 parser.add_argument("-bn", "--batch-norm", dest="batch_norm", default=False, action="store_true")
 
+#RNN
+parser.add_argument("-rnn", "--RNN-type", dest="RNN_type", default=None, choices=["LSTM", "SimpleRNN","GRU"])
+parser.add_argument("-rns", "--RNN-layer-shape", dest="RNN_layer_shape", default=None, type=int)
+parser.add_argument("-cxt", "--frame-context", dest="frame_context", default=None, type=int)
+
 # fit params
 parser.add_argument("-e", "--epoch", dest="epoch", default=50, type=int)
 parser.add_argument("-ns", "--no-shuffle", dest="shuffle", default=True, action="store_false")
@@ -134,7 +139,14 @@ if args.bP is None:
     args.bP = 1 - args.bS
 ###################################################END PARSER ARGUMENT SECTION########################################
 
-
+#Create context: Mapping of multiple input frames into a single target frame
+def create_context(dataset, look_back=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset) - look_back - 1):
+        a = dataset[i:(i + look_back), :]
+        dataX.append(a)
+        dataY.append(dataset[i + look_back, :])
+    return np.array(dataX), np.array(dataY)
 
 ###################################################INIT LOG########################################
 # redirect all the stream of both standard.out and standard.err to the same logger
@@ -190,7 +202,6 @@ trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
 
 # LOAD DATASET
 X_data = dm.load_DATASET(trainStftPath)
-#todo reshape dataset: la funzione che ce in autoencoder lo reshapa per darlo ad una rete cnn! noi abbiamo un semplice dense per il momento
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 X_data_reshaped = X_data_reshaped[0].T.view().T
 
@@ -207,22 +218,28 @@ if args.hybrid_phase:
 else:
     X_data_reshaped.dtype = 'float32'
 
-
-args.dense_input_shape = X_data_reshaped.shape[1]
 # calcolo il batch size
 batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
 
 #model definition
-model = autoencoder.autoencoder_fall_detection(strID)
-# if args.hybrid_phase:
-#     model.define_sequential_arch_phase(args)
-# else:
-model.define_sequential_arch(args)
+if args.RNN_type is not None:
+    X_data, Y_data = create_context(X_data_reshaped, look_back=args.frame_context)
+    args.dense_input_shape = X_data.shape[2]
+    model = autoencoder.autoencoder_fall_detection(strID)
+    model.define_sequential_rnn_arch(args)
+else:
+    args.dense_input_shape = X_data_reshaped.shape[1]
+    model = autoencoder.autoencoder_fall_detection(strID)
+    model.define_sequential_arch(args)
+    X_data = X_data_reshaped
+    Y_data = X_data
+
+
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
 #model fit
-m = model.model_fit(X_data_reshaped, X_data_reshaped, validation_split=args.val_split, nb_epoch=args.epoch,
+m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=args.epoch,
                   batch_size=batch_size, shuffle=args.shuffle,
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
@@ -231,13 +248,17 @@ m = model.model_fit(X_data_reshaped, X_data_reshaped, validation_split=args.val_
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
 
 source_stft = dm.load_DATASET(sourceStftPath)
-#todo reshape source_stft
 source = dm.reshape_set(source_stft, net_type='dense')
 source_sig = source[0].T.view().T
 
 if args.hybrid_phase:
-    source_sig_module = np.absolute(source_sig)
-    source_sig_phase = np.angle(source_sig)
+    #TODO check
+    if args.RNN_type is not None:
+        X_source_sig, _ = create_context(source_sig, look_back=args.frame_context)
+    else:
+        X_source_sig = source_sig
+    source_sig_module = np.absolute(X_source_sig)
+    source_sig_phase = np.angle(X_source_sig)
     cos_source_sig = np.cos(source_sig_phase)
     sin_source_sig = np.sin(source_sig_phase)
 
@@ -267,7 +288,9 @@ if args.hybrid_phase:
     prediction_complex = Mx * Phix
 else:
     source_sig.dtype = 'float32'
-    prediction = np.asarray(model.reconstruct_spectrogram(source_sig), order="C")
+    if args.RNN_type is not None:
+        X_source_sig, _ = create_context(source_sig, look_back=args.frame_context)
+    prediction = np.asarray(model.reconstruct_spectrogram(X_source_sig), order="C")
     prediction_complex = prediction.view()
     prediction_complex.dtype = "complex64"
 
