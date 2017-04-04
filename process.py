@@ -252,18 +252,19 @@ source = dm.reshape_set(source_stft, net_type='dense')
 source_sig = source[0].T.view().T
 
 if args.hybrid_phase:
-    #TODO check
-    if args.RNN_type is not None:
-        X_source_sig, _ = create_context(source_sig, look_back=args.frame_context)
-    else:
-        X_source_sig = source_sig
-    source_sig_module = np.absolute(X_source_sig)
-    source_sig_phase = np.angle(X_source_sig)
+    #TODO DO it separately for module, sin, cos
+    source_sig_module = np.absolute(source_sig)
+    source_sig_phase = np.angle(source_sig)
     cos_source_sig = np.cos(source_sig_phase)
     sin_source_sig = np.sin(source_sig_phase)
 
-    source_sig_input = np.hstack([source_sig_module, cos_source_sig, sin_source_sig])
+    source_sig_input = np.concatenate([source_sig_module, cos_source_sig, sin_source_sig], axis=1)
     #source_sig_input = np.hstack([source_sig_module, source_sig_phase])
+
+    if args.RNN_type is not None:
+        source_sig_input, _ = create_context(source_sig_input, look_back=args.frame_context)
+        source_sig_module = source_sig_module[: - args.frame_context - 1, :]
+        source_sig_phase = source_sig_phase[: - args.frame_context - 1, :]
 
     prediction = np.asarray(model.reconstruct_spectrogram(source_sig_input), order="C")
     pred_name = "prediction_" + strID
@@ -289,8 +290,8 @@ if args.hybrid_phase:
 else:
     source_sig.dtype = 'float32'
     if args.RNN_type is not None:
-        X_source_sig, _ = create_context(source_sig, look_back=args.frame_context)
-    prediction = np.asarray(model.reconstruct_spectrogram(X_source_sig), order="C")
+        source_sig_input, _ = create_context(source_sig, look_back=args.frame_context)
+    prediction = np.asarray(model.reconstruct_spectrogram(source_sig_input), order="C")
     prediction_complex = prediction.view()
     prediction_complex.dtype = "complex64"
 

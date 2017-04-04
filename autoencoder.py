@@ -631,6 +631,7 @@ class autoencoder_fall_detection:
         if (params.batch_norm):
             x = BatchNormalization(mode=1)(x)
 
+        print("RNN_layer[" + params.RNN_type + "] -> (" + str(params.RNN_layer_shape) + ")")
         # ---------------------------------------------------------- Decoding
 
         for i in range(len(params.dense_shapes) - 1, -1, -1):  # backwards indices last excluded
