@@ -13,21 +13,21 @@ import joblib
 import os
 import fnmatch
 import sys
-from keras.layers import Input, Dense
+from keras.layers import Input, Dense, BatchNormalization
 from keras.models import Model
 
-#os.environ["PATH"]= os.environ["PATH"] + ":/usr/local/cuda/bin"
-#os.environ["THEANO_FLAGS"]="device=gpu"
+os.environ["PATH"]= os.environ["PATH"] + ":/usr/local/cuda/bin"
+os.environ["THEANO_FLAGS"]="device=gpu"
 
 print(theano.config.device)
 print (os.environ["PATH"])
 
-DATA_DIR = "wavs/source/"
-HOP = 1024
+DATA_DIR = "dataset/train_sound/tot"
+HOP = 2048
 FTBINS = 4096
 CQBINS = 80
 BSIZE = 256
-EPOCHS = 300
+EPOCHS = 100
 SOURCE_FILE = "wavs/vox/Vox.wav"
 SR = 44100
 
@@ -73,22 +73,27 @@ def build_model(bins=CQBINS, activ='tanh'):
     input_img = Input(shape=(bins,))
 
     # "encoded" is the encoded representation of the input
-    encoded1 = Dense(1024, activation=activ)(input_img)
-    encoded2 = Dense(1024, activation=activ)(encoded1)
-    encoded3 = Dense(1024, activation=activ)(encoded2)
+    x = Dense(2048, activation=activ)(input_img)
+    x = BatchNormalization(mode=1)(x)
+    x = Dense(1024, activation=activ)(x)
+    x = Dense(800, activation=activ)(x)
+    x = BatchNormalization(mode=1)(x)
     #encoded4 = Dense(1024, activation=activ)(encoded3)
     #encoded5 = Dense(1024, activation=activ)(encoded4)
 
     #ENCODED REPRESENTATION
-    bottleneck = Dense(80, activation=activ)(encoded3)
+    bottleneck = Dense(80, activation=activ)(x)
+
+    x = BatchNormalization(mode=1)(bottleneck)
 
     # "decoded" is the lossy reconstruction of the input
-    decoded1 = Dense(1024, activation=activ)(bottleneck)
-    decoded2 = Dense(1024, activation=activ)(decoded1)
-    decoded3 = Dense(1024, activation=activ)(decoded2)
+    x = Dense(800, activation=activ)(x)
+    x = Dense(1024, activation=activ)(x)
+    x = BatchNormalization(mode=1)(x)
+    x = Dense(2048, activation=activ)(x)
     #decoded4 = Dense(1024, activation=activ)(decoded3)
     #decoded5 = Dense(1024, activation=activ)(decoded4)
-    output_AE = Dense(bins, activation='linear')(decoded3)
+    output_AE = Dense(bins, activation='linear')(x)
 
     # this model maps an input to its reconstruction
     autoencoder = Model(input=input_img, output=output_AE)
@@ -135,7 +140,7 @@ if __name__ == "__main__":
     p.shape, pcomplex.shape
 
     synthesised_direct_fft = librosa.core.istft(pcomplex, hop_length=HOP, win_length=FTBINS)
-    librosa.output.write_wav("./voice_check.wav", synthesised_direct_fft, SR)
+    librosa.output.write_wav("./voice_check_sound_unpitch.wav", synthesised_direct_fft, SR)
 
     # pp = middle_layer.predict(X_data_fft_real.T)
     # pp.shape

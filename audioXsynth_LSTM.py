@@ -20,7 +20,7 @@ os.environ["THEANO_FLAGS"]="device=gpu"
 print(theano.config.device)
 print (os.environ["PATH"])
 
-DATA_DIR = "wavs/source/"
+DATA_DIR = "dataset/train_sound/tot"
 HOP = 1024
 FTBINS = 4096
 CQBINS = 80
