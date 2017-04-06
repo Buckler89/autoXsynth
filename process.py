@@ -54,11 +54,8 @@ parser.add_argument("-it", "--input-type", dest="input_type", default="stft")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
-
-sr = 22050
-hops = 2048
-nfft = 4096
-
+parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
+parser.add_argument("-hop", dest="hopsize", default=2048)
 
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
@@ -137,6 +134,11 @@ if args.aP is None:
     args.aP = 1 - args.aS
 if args.bP is None:
     args.bP = 1 - args.bS
+
+#Feature Params
+sr = 22050
+hops = args.hopsize
+nfft = 4096
 ###################################################END PARSER ARGUMENT SECTION########################################
 
 #Create context: Mapping of multiple input frames into a single target frame
@@ -197,8 +199,7 @@ ts0 = time.time()
 st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
 print("experiment start in date: " + st0)
 
-trainStftPath = os.path.join(root_dir, 'dataset', 'train', args.input_type)
-
+trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
 
 # LOAD DATASET
 X_data = dm.load_DATASET(trainStftPath)
@@ -220,6 +221,9 @@ else:
 
 # calcolo il batch size
 batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
+args.batch_size = batch_size
+print ("Training on " + str(len(X_data_reshaped)) + " samples")
+print ("Batch size: " + str(batch_size) + " samples")
 
 #model definition
 if args.RNN_type is not None:
@@ -289,6 +293,7 @@ if args.hybrid_phase:
     prediction_complex = Mx * Phix
 else:
     source_sig.dtype = 'float32'
+    source_sig_input = source_sig
     if args.RNN_type is not None:
         source_sig_input, _ = create_context(source_sig, look_back=args.frame_context)
     prediction = np.asarray(model.reconstruct_spectrogram(source_sig_input), order="C")
