@@ -20,7 +20,7 @@ def load_DATASET(datasetPath):
     """
     Carica tutto il dataset (spettri) in una lista di elementi [filename , matrix ]
     """
-    print("Loading A3FALL dataset")
+    print("Loading dataset from " + datasetPath)
     dataset = list()
     for root, dirnames, filenames in os.walk(datasetPath):
         i = 0
