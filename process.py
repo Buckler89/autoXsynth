@@ -45,7 +45,7 @@ parser.add_argument("-log", "--logging", dest="log", default=False, action="stor
 parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
 parser.add_argument("-sp", "--score-path", dest="scorePath", default="score")
 parser.add_argument("-tl", "--trainset-list", dest="trainNameLists", action=eval_action, default=["trainset.lst"])
-parser.add_argument("-c", "--case", dest="case", default="case6")
+parser.add_argument("-c", "--source", dest="source", default="Vox.npy")
 parser.add_argument("-tln", "--test-list-names", dest="testNamesLists", action=eval_action,
                     default=["testset_1.lst", "testset_2.lst", "testset_3.lst", "testset_4.lst"])
 parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval_action,
@@ -254,7 +254,7 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
 
 m.save('model_'+strID+'.hd5')
 
-sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
+sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
 
 source_stft = dm.load_DATASET(sourceStftPath)
 source = dm.reshape_set(source_stft, net_type='dense')
