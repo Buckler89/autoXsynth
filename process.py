@@ -98,7 +98,7 @@ parser.add_argument("-cxt", "--frame-context", dest="frame_context", default=Non
 
 # fit params
 parser.add_argument("-e", "--epoch", dest="epoch", default=50, type=int)
-parser.add_argument("-ns", "--no-shuffle", dest="shuffle", default=True, action="store_false")
+parser.add_argument("-ns", "--shuffle", dest="shuffle", default="True", choices=["True","False","batch"])
 parser.add_argument("-bs", "--batch-size-fract", dest="batch_size_fract", default=0.1, type=float)
 parser.add_argument("-f", "--fit-net", dest="fit_net", default=False, action="store_true")
 parser.add_argument("-o", "--optimizer", dest="optimizer", default="adadelta", choices=["adadelta", "adam", "sgd"])
@@ -130,6 +130,10 @@ if args.config_filename is not None:
     args = parser.parse_args(namespace=args)
 
 # set mix reconstruction params
+if args.shuffle == "True":
+    args.shuffle = True
+elif args.shuffle == "False":
+    args.shuffle = False
 if args.aP is None:
     args.aP = 1 - args.aS
 if args.bP is None:
@@ -307,6 +311,6 @@ librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
 ts1 = time.time()
 tot_time = (ts1-ts0)/60
 
-print("Experiment emplased " +str(tot_time) + " minutes.")
+print("Experiment enlapsed " +str(tot_time) + " minutes.")
 print("END.")
 

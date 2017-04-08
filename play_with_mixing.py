@@ -6,9 +6,9 @@ import utility as u
 sr = 22050
 hops = 2048
 nfft = 4096
-aS = 0.05
+aS = 0.0
 aP = 1-aS
-aM = 0.3
+aM = 0.02
 bS = 0.5
 bP = 1-bS
 frame_context = 2
@@ -16,7 +16,7 @@ frame_context = 2
 root_path = os.getcwd()
 destFold = os.path.join(root_path,'mix_analysis')
 u.makedir(destFold)
-id='408'
+id='420'
 out_filename = os.path.join(destFold,"reconstructed_"+id+"_P.wav")
 
 predictName = "prediction_"+id+".npy"

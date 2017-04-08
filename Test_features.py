@@ -1,6 +1,6 @@
 from AudioFeatures import *
 
-audio_files_path = 'dataset/train_guns'
+audio_files_path = 'dataset/train/wav/dirtyRules'
 HOP = 2048
 FTBINS = 4096
 SR = 22050

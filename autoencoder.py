@@ -583,7 +583,7 @@ class autoencoder_fall_detection:
         decoded = x
         self._autoencoder = Model(input_img, decoded)
         self._autoencoder.summary()
-        self._autoencoder.name = 'DenseAutoencoder'
+        self._autoencoder.name = 'Autoencoder'
         return self._autoencoder
 
     def define_sequential_rnn_arch(self, params):
@@ -739,7 +739,7 @@ class autoencoder_fall_detection:
 
             csv_logger = CSVLogger(nameFileLogCsv)
 
-            if x_dev is not None and y_dev is not None or validation_split > 0.0:  # se ho a disposizione un validation set allora faccio anche l'early stopping
+            if (x_dev is not None and y_dev is not None) or validation_split > 0.0:  # se ho a disposizione un validation set allora faccio anche l'early stopping
 
                 self._autoencoder.fit(x_train, y_train,
                                       nb_epoch=nb_epoch,
@@ -754,7 +754,7 @@ class autoencoder_fall_detection:
                                       nb_epoch=nb_epoch,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
-                                      verbose=2)
+                                      verbose=1)
                 # save the model an weights on disk
                 # self.save_model(self._autoencoder)
 
