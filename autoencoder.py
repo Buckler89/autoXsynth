@@ -754,6 +754,7 @@ class autoencoder_fall_detection:
                                       nb_epoch=nb_epoch,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
+                                      callbacks=[csv_logger],
                                       verbose=1)
                 # save the model an weights on disk
                 # self.save_model(self._autoencoder)

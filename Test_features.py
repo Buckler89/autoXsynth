@@ -1,6 +1,6 @@
 from AudioFeatures import *
 
-audio_files_path = 'dataset/train/wav/dirtyRules'
+audio_files_path = 'dataset/train/wav/chit_diego'
 HOP = 2048
 FTBINS = 4096
 SR = 22050

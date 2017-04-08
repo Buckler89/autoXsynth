@@ -8,10 +8,10 @@ hops = 2048
 nfft = 4096
 aS = 0.0
 aP = 1-aS
-aM = 0.02
-bS = 0.5
+aM = 0.0
+bS = 1
 bP = 1-bS
-frame_context = 2
+frame_context = 3
 
 root_path = os.getcwd()
 destFold = os.path.join(root_path,'mix_analysis')

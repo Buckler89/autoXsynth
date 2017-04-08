@@ -252,6 +252,7 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
 
+m.save('last_exp_model.hd5')
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type)
 
