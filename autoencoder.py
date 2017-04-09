@@ -498,7 +498,15 @@ class autoencoder_fall_detection:
 
     def define_sequential_arch(self, params):
 
-        input_img = Input(shape=(params.dense_input_shape,))
+        if params.RNN_type is not None:
+            #bottleneck indicates if the central layer of autoencoder is not a dense layer, in order to obtain a symmentric autoencoder:
+            # dense-Rnn-dense. In this case te last number in dense_shape isn't the encoding layer.
+            bottlneck=1 #TODO FIND ETTER WAY TO DO THIS
+            input_img = Input(shape=(params.frame_context, params.dense_input_shape))
+        else:
+            bottlneck=0 #TODO FIND ETTER WAY TO DO THIS
+            input_img = Input(shape=(params.dense_input_shape,))
+
         x = input_img
         for i in range(len(params.dense_shapes)):
             x = Dense(params.dense_shapes[i],
@@ -516,9 +524,36 @@ class autoencoder_fall_detection:
             if (params.batch_norm):
                 x = BatchNormalization(mode=1)(x)
 
+        if params.RNN_type is not None:
+        # ---------------------------------------------------------- RNN Bottleneck
+
+            if params.RNN_type == 'LSTM':
+                x = LSTM(params.RNN_layer_shape,
+                         init=params.init,
+                         activation=params.dense_activation,
+                         return_sequences=False)(x)
+
+            elif params.RNN_type == 'SimpleRNN':
+                x = SimpleRNN(params.RNN_layer_shape,
+                              init=params.init,
+                              activation=params.dense_activation,
+                              return_sequences=False)(x)
+
+            elif params.RNN_type == 'GRU':
+                x = GRU(params.RNN_layer_shape,
+                        init=params.init,
+                        activation=params.dense_activation,
+                        return_sequences=False)(x)
+
+            if (params.dropout):
+                x = Dropout(params.drop_rate)(x)
+            if (params.batch_norm):
+                x = BatchNormalization(mode=1)(x)
+
+            print("RNN_layer[" + params.RNN_type + "] -> (" + str(params.RNN_layer_shape) + ")")
         # ---------------------------------------------------------- Decoding
 
-        for i in range(len(params.dense_shapes) - 2, -1, -1):  # backwards indices last excluded
+        for i in range(len(params.dense_shapes) - (2-bottlneck), -1, -1):  # backwards indices last excluded
 
             if i is not 0:
                 x = Dense(params.dense_shapes[i],
@@ -652,7 +687,7 @@ class autoencoder_fall_detection:
             elif params.hybrid_phase:
                 mod = Dense((int(params.dense_input_shape / 3)),
                             init=params.init,
-                            activation='relu',  # because the module is always positive
+                            activation='relu', # because the module is always positive
                             W_regularizer=eval(params.d_w_reg),
                             b_regularizer=eval(params.d_b_reg),
                             activity_regularizer=eval(params.d_a_reg),

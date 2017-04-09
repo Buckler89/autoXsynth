@@ -41,6 +41,7 @@ class eval_action(argparse.Action):
 parser.add_argument("-id", "--exp-index", dest="id", default=0, type=int)
 parser.add_argument("-root", "--root-path",dest="root_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
+parser.add_argument("-sv", "--save-model", dest="save_model", default=False, action="store_true")
 
 parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
 parser.add_argument("-sp", "--score-path", dest="scorePath", default="score")
@@ -229,19 +230,22 @@ args.batch_size = batch_size
 print ("Training on " + str(len(X_data_reshaped)) + " samples")
 print ("Batch size: " + str(batch_size) + " samples")
 
+
 #model definition
 if args.RNN_type is not None:
     X_data, Y_data = create_context(X_data_reshaped, look_back=args.frame_context)
     args.dense_input_shape = X_data.shape[2]
-    model = autoencoder.autoencoder_fall_detection(strID)
-    model.define_sequential_rnn_arch(args)
+    # model = autoencoder.autoencoder_fall_detection(strID)
+    # model.define_sequential_rnn_arch(args)
 else:
     args.dense_input_shape = X_data_reshaped.shape[1]
-    model = autoencoder.autoencoder_fall_detection(strID)
-    model.define_sequential_arch(args)
+    # model = autoencoder.autoencoder_fall_detection(strID)
+    # model.define_sequential_arch(args)
     X_data = X_data_reshaped
     Y_data = X_data
 
+model = autoencoder.autoencoder_fall_detection(strID)
+model.define_sequential_arch(args)
 
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
@@ -252,7 +256,8 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
 
-m.save('model_'+strID+'.hd5')
+if args.save_model:
+    m.save('model_'+strID+'.hd5')
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
 
@@ -286,7 +291,6 @@ if args.hybrid_phase:
     #prediction_phase = prediction[:, module_len:]
 
 
-    #TODO ADD PARAMETRIC MIXING
     Mx = args.aS * source_sig_module + args.aP * prediction_module + args.aM * np.sqrt( source_sig_module * prediction_module)
     Phix = args.bS * source_sig_phase + args.bP * prediction_phase
 
