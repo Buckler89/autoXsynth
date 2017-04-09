@@ -56,6 +56,7 @@ parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
+parser.add_argument("-ta", "--target", dest="target", default="target")
 parser.add_argument("-hop", dest="hopsize", default=2048)
 
 # CNN params
@@ -205,11 +206,16 @@ st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
 print("experiment start in date: " + st0)
 
 trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
+targetStftPath = os.path.join(root_dir, 'dataset', args.target, args.input_type)
 
 # LOAD DATASET
 X_data = dm.load_DATASET(trainStftPath)
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 X_data_reshaped = X_data_reshaped[0].T.view().T
+
+Y_data = dm.load_DATASET(targetStftPath)
+Y_data_reshaped = dm.reshape_set(Y_data, net_type='dense')
+Y_data_reshaped = Y_data_reshaped[0].T.view().T
 
 if args.hybrid_phase:
     X_data_module = np.absolute(X_data_reshaped)
@@ -223,7 +229,7 @@ if args.hybrid_phase:
 
 else:
     X_data_reshaped.dtype = 'float32'
-
+    Y_data_reshaped.dtype = 'float32'
 # calcolo il batch size
 batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
 args.batch_size = batch_size
@@ -235,14 +241,11 @@ print ("Batch size: " + str(batch_size) + " samples")
 if args.RNN_type is not None:
     X_data, Y_data = create_context(X_data_reshaped, look_back=args.frame_context)
     args.dense_input_shape = X_data.shape[2]
-    # model = autoencoder.autoencoder_fall_detection(strID)
-    # model.define_sequential_rnn_arch(args)
+
 else:
     args.dense_input_shape = X_data_reshaped.shape[1]
-    # model = autoencoder.autoencoder_fall_detection(strID)
-    # model.define_sequential_arch(args)
     X_data = X_data_reshaped
-    Y_data = X_data
+    Y_data = Y_data_reshaped
 
 model = autoencoder.autoencoder_fall_detection(strID)
 model.define_sequential_arch(args)
