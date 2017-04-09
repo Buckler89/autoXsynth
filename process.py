@@ -235,12 +235,8 @@ print ("Batch size: " + str(batch_size) + " samples")
 if args.RNN_type is not None:
     X_data, Y_data = create_context(X_data_reshaped, look_back=args.frame_context)
     args.dense_input_shape = X_data.shape[2]
-    # model = autoencoder.autoencoder_fall_detection(strID)
-    # model.define_sequential_rnn_arch(args)
 else:
     args.dense_input_shape = X_data_reshaped.shape[1]
-    # model = autoencoder.autoencoder_fall_detection(strID)
-    # model.define_sequential_arch(args)
     X_data = X_data_reshaped
     Y_data = X_data
 
