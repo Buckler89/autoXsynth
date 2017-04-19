@@ -68,6 +68,23 @@ class AudioFeatures:
                     y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
                     np.save(os.path.join(feat_fold_name, feat_name), y)
 
+    def feat_extract_from_npy(self):
+        feat_fold_name = os.path.join(os.path.splitext(self.path)[0], self.feature + "-" + str(self.hop))
+        if not os.path.isdir(feat_fold_name):
+            os.makedirs(feat_fold_name)
+        data = np.load(self.path)
+        feat_name = 000
+
+        print ("\nThis file contains " + str(len(data)) + " sequences. Extracting!")
+        for note in tqdm(data):
+            audio = note[0]
+            if self.feature == 'stft':
+                y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
+                np.save(os.path.join(feat_fold_name, str(feat_name)), y)
+            feat_name += 1
+
+
+
 
 
 
