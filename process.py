@@ -45,17 +45,14 @@ parser.add_argument("-sv", "--save-model", dest="save_model", default=False, act
 
 parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
 parser.add_argument("-sp", "--score-path", dest="scorePath", default="score")
-parser.add_argument("-tl", "--trainset-list", dest="trainNameLists", action=eval_action, default=["trainset.lst"])
 parser.add_argument("-c", "--source", dest="source", default="Vox.npy")
-parser.add_argument("-tln", "--test-list-names", dest="testNamesLists", action=eval_action,
-                    default=["testset_1.lst", "testset_2.lst", "testset_3.lst", "testset_4.lst"])
-parser.add_argument("-dl", "--dev-list-names", dest="devNamesLists", action=eval_action,
-                    default=["devset_1.lst", "devset_2.lst", "devset_3.lst", "devset_4.lst"])
+
 parser.add_argument("-it", "--input-type", dest="input_type", default="stft")
 parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
+parser.add_argument("-js", "--json-path", dest="jsonPath", default=None)
 parser.add_argument("-hop", dest="hopsize", default=2048)
 
 # CNN params
@@ -207,7 +204,10 @@ print("experiment start in date: " + st0)
 trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
 
 # LOAD DATASET
-X_data = dm.load_DATASET(trainStftPath)
+if 'NSynth' in args.dataset:
+    dm.scanJson(args.jsonPath, instrument_family_strs='keyboard', notes=dm.MajorKey.A, instrument_source_strs='all' ) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
+else:
+    X_data = dm.load_DATASET(trainStftPath)
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
 X_data_reshaped = X_data_reshaped[0].T.view().T
 
