@@ -57,6 +57,7 @@ parser.add_argument("-js", "--instrument-family-strs", dest="instrument_family_s
 parser.add_argument("-js", "--notes", dest="notes", default=None)
 parser.add_argument("-js", "--instrument-source-strs", dest="instrument_source_strs", default=None)
 parser.add_argument("-hop", dest="hopsize", default=2048)
+parser.add_argument("-sp", "--sample-rate", dest="sample_rate", default=22)
 
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
@@ -142,7 +143,7 @@ if args.bP is None:
 
 
 #Feature Params
-sr = 22050 #TODO METTERE COME PARAMETRO SU NSYNT È 16000!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!readme!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!!readme
+sr = args.sample_rate #TODO METTERE COME PARAMETRO SU NSYNT È 16000!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!readme!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!!readme
 hops = args.hopsize
 nfft = 4096
 ###################################################END PARSER ARGUMENT SECTION########################################
