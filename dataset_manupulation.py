@@ -7,6 +7,7 @@ Created on Fri Feb  3 17:36:52 2017
 """
 import os
 import numpy as np
+from collections import Iterable
 
 class Note():
     """
@@ -42,22 +43,23 @@ class MajorKey():
 
 def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all'):
     selectedFile = []
+    single_dim_array = np.array([])  # TODO find a better way to flat all the note into sigle one dimensional array
 
     if notes is not 'all':
-        notesArray = np.hstack(notes)
-    else:
-        notesArray = np.array([-1]);
+        for x in np.hstack(notes):
+            if isinstance(x, Iterable):
+                for y in x:
+                    single_dim_array = np.append(single_dim_array, y)
+            else:
+                single_dim_array = np.append(single_dim_array, x)
 
     for key, value in jsonFile.items():
         if value['instrument_family_str'] in instrument_family_strs or instrument_family_strs == 'all':
 
-            if value['pitch'] in notesArray or notes is 'all':
+            if value['pitch'] in single_dim_array or notes is 'all':
 
                 if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
-                    selectedFile.append(key)
-
-                    # for subkey, subvalue in value.items():
-                    # print(str(key)+'----------------'+str(value))
+                    selectedFile.append(key+'.npy')
     return selectedFile
 
 
@@ -68,13 +70,13 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
 #     #     global logger
 #     #     logger = u.MyLogger(id, logToFile)
 
-def load_DATASET(datasetPath, filelist=None):
+def load_DATASET(datasetPath, fileslist=None):
     """
     Carica tutto il dataset (spettri) in una lista di elementi [filename , matrix ]
     """
     print("Loading dataset from " + datasetPath)
     dataset = list()
-    if filelist is None:
+    if fileslist is None:
         for root, dirnames, filenames in os.walk(datasetPath):
             i = 0
             for file in filenames:
@@ -84,7 +86,7 @@ def load_DATASET(datasetPath, filelist=None):
                 i += 1
     else:
         i = 0
-        for file in filelist:
+        for file in fileslist:
             matrix = np.load(os.path.join(datasetPath, file))
             data = [file, matrix]
             dataset.append(data)

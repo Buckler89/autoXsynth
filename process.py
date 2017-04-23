@@ -52,7 +52,10 @@ parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
-parser.add_argument("-js", "--json-path", dest="jsonPath", default=None)
+parser.add_argument("-jp", "--json-path", dest="jsonPath", default=None)
+parser.add_argument("-js", "--instrument-family-strs", dest="instrument_family_strs", default=None)
+parser.add_argument("-js", "--notes", dest="notes", default=None)
+parser.add_argument("-js", "--instrument-source-strs", dest="instrument_source_strs", default=None)
 parser.add_argument("-hop", dest="hopsize", default=2048)
 
 # CNN params
@@ -137,8 +140,9 @@ if args.aP is None:
 if args.bP is None:
     args.bP = 1 - args.bS
 
+
 #Feature Params
-sr = 22050
+sr = 22050 #TODO METTERE COME PARAMETRO SU NSYNT È 16000!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!readme!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!!readme
 hops = args.hopsize
 nfft = 4096
 ###################################################END PARSER ARGUMENT SECTION########################################
@@ -204,8 +208,12 @@ print("experiment start in date: " + st0)
 trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
 
 # LOAD DATASET
-if 'NSynth' in args.dataset:
-    dm.scanJson(args.jsonPath, instrument_family_strs='keyboard', notes=dm.MajorKey.A, instrument_source_strs='all' ) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
+if 'NSynth' in args.trainset:
+    jsonPath = os.path.join(root_dir,  'dataset', args.jsonPath)
+    with open(jsonPath, 'r', encoding='utf-8') as infile:
+        jsonFile = json.load(infile)
+    fileslist = dm.scanJson(jsonFile, instrument_family_strs=args.instrument_family_strs, notes=args.notes, instrument_source_strs=args.instrument_source_strs) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
+    X_data = dm.load_DATASET(trainStftPath, fileslist)
 else:
     X_data = dm.load_DATASET(trainStftPath)
 X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
