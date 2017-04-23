@@ -53,11 +53,11 @@ parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
 parser.add_argument("-jp", "--json-path", dest="jsonPath", default=None)
-parser.add_argument("-js", "--instrument-family-strs", dest="instrument_family_strs", default='all')
+parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all')
 parser.add_argument("--notes", dest="notes", default='all')
 parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all')
 parser.add_argument("-hop", dest="hopsize", default=2048)
-parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050)
+parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050, type=int)
 
 # CNN params
 # parser.add_argument("-cln", "--conv-layers-numb", dest="conv_layer_numb", default=3, type=int)
