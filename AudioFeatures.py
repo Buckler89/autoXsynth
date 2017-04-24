@@ -71,7 +71,13 @@ class AudioFeatures:
                     y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
                     np.save(os.path.join(feat_fold_name, feat_name), y)
             if self.free_disk:
-                os.remove(filename)
+                try:
+                    os.remove(filename)
+                    print('file {0} removed'.format(filename))
+                except Exception as e:
+                    print('failed to remove file {0}'.format(filename))
+                    print(e)
+                    pass
 
     def feat_extract_from_npy(self):
         feat_fold_name = os.path.join(os.path.splitext(self.path)[0], self.feature + "-" + str(self.hop))
