@@ -41,6 +41,65 @@ class MajorKey():
     Ad = [Note.Ad, Note.C, Note.D, Note.Dd, Note.F, Note.G, Note.A]
     B  = [Note.B, Note.Cd, Note.Dd, Note.E, Note.Fd, Note.Gd, Note.Ad]
 
+def parsenotes(strNoteList):
+    """
+    take a list of string with note (i.e. G) or key (i.e. Dd_Majkey) ad returns the midi number af all the note 
+    :param strNoteList: example ['G','A','Db_MajKey']
+    :return: array of int
+    """
+    notes = []
+    for n in strNoteList:
+        if n is 'A':
+            notes.append(Note.A)
+        if n is 'Ad':
+            notes.append(Note.Ad)
+        if n is 'B':
+            notes.append(Note.B)
+        if n is 'C':
+            notes.append(Note.C)
+        if n is 'Cd':
+            notes.append(Note.Cd)
+        if n is 'D':
+            notes.append(Note.D)
+        if n is 'Dd':
+            notes.append(Note.D)
+        if n is 'E':
+            notes.append(Note.E)
+        if n is 'F':
+            notes.append(Note.F)
+        if n is 'Fd':
+            notes.append(Note.Fd)
+        if n is 'G':
+            notes.append(Note.G)
+        if n is 'Gd':
+            notes.append(Note.Gd)
+
+        if n is 'AMaj':
+            notes.append(MajorKey.A)
+        if n is 'AdMaj':
+            notes.append(MajorKey.Ad)
+        if n is 'BMaj':
+            notes.append(MajorKey.B)
+        if n is 'CMaj':
+            notes.append(MajorKey.C)
+        if n is 'CdMaj':
+            notes.append(MajorKey.Cd)
+        if n is 'DMaj':
+            notes.append(MajorKey.D)
+        if n is 'DdMaj':
+            notes.append(MajorKey.D)
+        if n is 'EMaj':
+            notes.append(MajorKey.E)
+        if n is 'FMaj':
+            notes.append(MajorKey.F)
+        if n is 'FdMaj':
+            notes.append(MajorKey.Fd)
+        if n is 'GMaj':
+            notes.append(MajorKey.G)
+        if n is 'GdMaj':
+            notes.append(MajorKey.Gd)
+
+    return notes
 def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all'):
     selectedFile = []
     single_dim_array = np.array([])  # TODO find a better way to flat all the note into sigle one dimensional array

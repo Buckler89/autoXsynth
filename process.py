@@ -53,9 +53,9 @@ parser.add_argument("-tt", "--target-type", dest="target_type", default="mfcc")
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
 parser.add_argument("-jp", "--json-path", dest="jsonPath", default=None)
-parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all')
-parser.add_argument("--notes", dest="notes", default='all')
-parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all')
+parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all', choices=["all", "bass","brass","flute","guitar","keyboard","mallet","organ","reed","string","synth_lead","vocal"])
+parser.add_argument("--notes", dest="notes", default='all', action=eval_action)
+parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all', choices=["all","acoustic","electronic","synthetic"])
 parser.add_argument("-hop", dest="hopsize", default=2048)
 parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050, type=int)
 
@@ -101,7 +101,9 @@ parser.add_argument("-cxt", "--frame-context", dest="frame_context", default=Non
 # fit params
 parser.add_argument("-e", "--epoch", dest="epoch", default=50, type=int)
 parser.add_argument("-ns", "--shuffle", dest="shuffle", default="True", choices=["True","False","batch"])
-parser.add_argument("-bs", "--batch-size-fract", dest="batch_size_fract", default=0.1, type=float)
+parser.add_argument("-bsf", "--batch-size-fract", dest="batch_size_fract", default=None, type=float, help='batch size express in % of the trainset')
+parser.add_argument("-bse", "--batch-size-effective", dest="batch_size_effective", default=None, type=int, help='batch size in number of sample')
+
 parser.add_argument("-f", "--fit-net", dest="fit_net", default=False, action="store_true")
 parser.add_argument("-o", "--optimizer", dest="optimizer", default="adadelta", choices=["adadelta", "adam", "sgd"])
 parser.add_argument("-l", "--loss", dest="loss", default="mse", choices=["mse", "msle"])
@@ -141,9 +143,18 @@ if args.aP is None:
 if args.bP is None:
     args.bP = 1 - args.bS
 
+if args.batch_size_effective is None and args.batch_size_fract is None:
+    print("specify batch-size in % or in absolute number")
+    raise ValueError('specify batch-size in % or in absolute number')
+
+if args.batch_size_effective is not None and args.batch_size_fract is not None:
+    print("specify batch-size only in % or in absolute number")
+    raise ValueError('specify batch-size only in % or in absolute number')
+
+
 
 #Feature Params
-sr = args.sample_rate #TODO METTERE COME PARAMETRO SU NSYNT È 16000!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!readme!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!readme!!!!!!!!!!!!!!!!!!!!!!!!!readme
+sr = args.sample_rate
 hops = args.hopsize
 nfft = 4096
 ###################################################END PARSER ARGUMENT SECTION########################################
@@ -210,10 +221,14 @@ trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type
 
 # LOAD DATASET
 if 'NSynth' in args.trainset:
+    if args.notes is 'all':
+        notes = 'all'
+    else:
+        notes = dm.parsenotes(args.notes)
     jsonPath = os.path.join(root_dir,  'dataset', args.jsonPath)
     with open(jsonPath, 'r', encoding='utf-8') as infile:
         jsonFile = json.load(infile)
-    fileslist = dm.scanJson(jsonFile, instrument_family_strs=args.instrument_family_strs, notes=args.notes, instrument_source_strs=args.instrument_source_strs) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
+    fileslist = dm.scanJson(jsonFile, instrument_family_strs=args.instrument_family_strs, notes=notes, instrument_source_strs=args.instrument_source_strs) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
     X_data = dm.load_DATASET(trainStftPath, fileslist)
 else:
     X_data = dm.load_DATASET(trainStftPath)
