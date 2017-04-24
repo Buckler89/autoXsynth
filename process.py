@@ -191,7 +191,7 @@ nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
 nameFileLogCsv = os.path.join(csvFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis
 reconstructedFile = os.path.join(wavDestPath, 'process_' + strID + '.wav')
 jsonargsFileName = os.path.join(argsFolder, 'process_' + strID + '.json')
-jsonargs = json(args.__dict__)
+jsonargs = json.dump(args.__dict__)
 
 
 with open(os.path.join(jsonargsFileName), 'w') as file:
