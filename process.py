@@ -227,7 +227,8 @@ if 'NSynth' in args.trainset:
     else:
         notes = dm.parsenotes(args.notes)
     jsonPath = os.path.join(root_dir,  'dataset', args.jsonPath)
-    with open(jsonPath, 'r', encoding='utf-8') as infile:
+    #with open(jsonPath, 'r', encoding='utf-8') as infile:
+    with open(jsonPath, 'r') as infile:
         jsonFile = json.load(infile)
     fileslist = dm.scanJson(jsonFile, instrument_family_strs=args.instrument_family_strs, notes=notes, instrument_source_strs=args.instrument_source_strs) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
     X_data = dm.load_DATASET(trainStftPath, fileslist)
