@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 class AudioFeatures:
 
-    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None):
+    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None, free_disk=False):
         self.n_fft = n_fft
         self.feature = feature
         self.win_len = win_len
@@ -14,6 +14,7 @@ class AudioFeatures:
         self.channels = channels
         self.extension = extension
         self.s_rate = s_rate
+        self.free_disk = free_disk
 
     def __str__(self):
         values = [
@@ -56,8 +57,9 @@ class AudioFeatures:
         for filename in tqdm(samples_list):
             feat_name = os.path.basename(filename)[0:-4] + ".npy"
             print("Extracting feature " + self.feature + " from file: " + filename)
-            if os.path.isfile(os.path.join(feat_fold_name,feat_name)):
+            if os.path.isfile(os.path.join(feat_fold_name, feat_name)):
                 print ("This file exists. Skipping!")
+
             else:
                 audio, sample_rate = librosa.core.load(filename, sr=self.s_rate, dtype=np.float32) #stereo sound to mono
 
@@ -68,6 +70,8 @@ class AudioFeatures:
                 if self.feature == 'mfcc':
                     y = np.abs(librosa.feature.mfcc(y=audio, sr=sample_rate, hop_length=self.hop, n_fft=self.n_fft, n_mfcc=self.channels))
                     np.save(os.path.join(feat_fold_name, feat_name), y)
+            if self.free_disk:
+                os.remove(filename)
 
     def feat_extract_from_npy(self):
         feat_fold_name = os.path.join(os.path.splitext(self.path)[0], self.feature + "-" + str(self.hop))
