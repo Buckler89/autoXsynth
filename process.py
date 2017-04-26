@@ -55,6 +55,8 @@ parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
 parser.add_argument("-jp", "--json-path", dest="jsonPath", default=None)
 parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all', choices=["all", "bass","brass","flute","guitar","keyboard","mallet","organ","reed","string","synth_lead","vocal"])
 parser.add_argument("--notes", dest="notes", default='all', action=eval_action)
+parser.add_argument("-vmin", "--velocity-min", dest="velocityMin", default=0, type=int)
+parser.add_argument("-vmax", "--velocity-max", dest="velocityMax", default=127, type=int)
 parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all', choices=["all","acoustic","electronic","synthetic"])
 parser.add_argument("-hop", dest="hopsize", default=2048)
 parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050, type=int)
@@ -230,7 +232,12 @@ if 'NSynth' in args.trainset:
     #with open(jsonPath, 'r', encoding='utf-8') as infile:
     with open(jsonPath, 'r') as infile:
         jsonFile = json.load(infile)
-    fileslist = dm.scanJson(jsonFile, instrument_family_strs=args.instrument_family_strs, notes=notes, instrument_source_strs=args.instrument_source_strs) #TODO i parametri vanno nel file di config: attento alle note che vanno parsate
+    fileslist = dm.scanJson(jsonFile,
+                            instrument_family_strs=args.instrument_family_strs,
+                            notes=notes,
+                            instrument_source_strs=args.instrument_source_strs,
+                            velocityMin=args.velocityMin,
+                            velocityMax=args.velocityMax)
     X_data = dm.load_DATASET(trainStftPath, fileslist)
 else:
     X_data = dm.load_DATASET(trainStftPath)

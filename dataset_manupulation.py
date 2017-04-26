@@ -100,7 +100,7 @@ def parsenotes(strNoteList):
             notes.append(MajorKey.Gd)
 
     return notes
-def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all'):
+def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all', velocityMin=0, velocityMax=127):
     selectedFile = []
     single_dim_array = np.array([])  # TODO find a better way to flat all the note into sigle one dimensional array
     single_dim_array.dtype = np.int8
@@ -119,7 +119,12 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
             if value['pitch'] in single_dim_array or notes is 'all':
 
                 if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
-                    selectedFile.append(key+'.npy')
+
+                    if value['pitch'] >= velocityMin and value['pitch'] <= velocityMax:
+
+                        selectedFile.append(key+'.npy')
+
+
     return selectedFile
 
 
