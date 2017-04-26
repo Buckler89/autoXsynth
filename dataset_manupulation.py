@@ -120,7 +120,7 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
 
                 if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
 
-                    if value['pitch'] >= velocityMin and value['pitch'] <= velocityMax:
+                    if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
 
                         selectedFile.append(key+'.npy')
 
