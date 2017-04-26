@@ -100,10 +100,11 @@ def parsenotes(strNoteList):
             notes.append(MajorKey.Gd)
 
     return notes
-def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all', velocityMin=0, velocityMax=127):
+def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_source_strs='all', velocityMin=0, velocityMax=127, maxNumberOfFile=500):
     selectedFile = []
     single_dim_array = np.array([])  # TODO find a better way to flat all the note into sigle one dimensional array
     single_dim_array.dtype = np.int8
+
     if notes is not 'all': #need to put all notes in a one dimensional array
         for x in np.hstack(notes):
             if isinstance(x, Iterable):
@@ -112,17 +113,20 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
                     single_dim_array = np.append(single_dim_array, y)
             else:
                 single_dim_array = np.append(single_dim_array, x)
-
+    i=0
     for key, value in jsonFile.items():
-        if value['instrument_family_str'] in instrument_family_strs or instrument_family_strs == 'all':
+            if value['instrument_family_str'] in instrument_family_strs or instrument_family_strs == 'all':
 
-            if value['pitch'] in single_dim_array or notes is 'all':
+                if value['pitch'] in single_dim_array or notes is 'all':
 
-                if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
+                    if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
 
-                    if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
+                        if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
 
-                        selectedFile.append(key+'.npy')
+                            selectedFile.append(key+'.npy')
+                            i+=1
+                            if i >= maxNumberOfFile:
+                                break
 
 
     return selectedFile

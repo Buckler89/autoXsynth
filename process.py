@@ -58,6 +58,8 @@ parser.add_argument("--notes", dest="notes", default='all', action=eval_action)
 parser.add_argument("-vmin", "--velocity-min", dest="velocityMin", default=0, type=int)
 parser.add_argument("-vmax", "--velocity-max", dest="velocityMax", default=127, type=int)
 parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all', choices=["all","acoustic","electronic","synthetic"])
+parser.add_argument("-mnof", "--max-number-of-file", dest="maxNumberOfFile", default=127, type=int)
+
 parser.add_argument("-hop", dest="hopsize", default=2048)
 parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050, type=int)
 
@@ -237,7 +239,8 @@ if 'nsynth' in args.trainset:
                             notes=notes,
                             instrument_source_strs=args.instrument_source_strs,
                             velocityMin=args.velocityMin,
-                            velocityMax=args.velocityMax)
+                            velocityMax=args.velocityMax,
+                            maxNumberOfFile=args.maxNumberOfFile)
     X_data = dm.load_DATASET(trainStftPath, fileslist)
 else:
     X_data = dm.load_DATASET(trainStftPath)
