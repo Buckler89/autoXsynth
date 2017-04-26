@@ -142,15 +142,20 @@ def load_DATASET(datasetPath, fileslist=None, verbose=True):
     print("Loading dataset from " + datasetPath)
     dataset = list()
     if fileslist is None:
+        print('load all file')
+
         for root, dirnames, filenames in os.walk(datasetPath):
             i = 0
             for file in filenames:
+                if verbose:
+                    print('load ' + file)
                 matrix = np.load(os.path.join(root, file))
                 data = [file, matrix]
                 dataset.append(data)
                 i += 1
     else:
         i = 0
+        print('load file from list')
         for file in fileslist:
             if verbose:
                 print('load '+file)
