@@ -156,6 +156,7 @@ def load_DATASET(datasetPath, fileslist=None):
             data = [file, matrix]
             dataset.append(data)
             i += 1
+    print('load {0} file'.format(i))
     return dataset
 
 
