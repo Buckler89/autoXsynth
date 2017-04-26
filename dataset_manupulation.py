@@ -135,7 +135,7 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
 #     #     global logger
 #     #     logger = u.MyLogger(id, logToFile)
 
-def load_DATASET(datasetPath, fileslist=None):
+def load_DATASET(datasetPath, fileslist=None, verbose=True):
     """
     Carica tutto il dataset (spettri) in una lista di elementi [filename , matrix ]
     """
@@ -152,6 +152,8 @@ def load_DATASET(datasetPath, fileslist=None):
     else:
         i = 0
         for file in fileslist:
+            if verbose:
+                print('load '+file)
             matrix = np.load(os.path.join(datasetPath, file))
             data = [file, matrix]
             dataset.append(data)
