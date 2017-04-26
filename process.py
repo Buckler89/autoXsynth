@@ -223,7 +223,7 @@ print("experiment start in date: " + st0)
 trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
 
 # LOAD DATASET
-if 'NSynth' in args.trainset:
+if 'nsynth' in args.trainset:
     if args.notes is 'all':
         notes = 'all'
     else:
