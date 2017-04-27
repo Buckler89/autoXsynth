@@ -139,7 +139,7 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
 #     #     global logger
 #     #     logger = u.MyLogger(id, logToFile)
 
-def load_DATASET(datasetPath, fileslist=None, verbose=True):
+def load_DATASET(datasetPath, fileslist=None, verbose=False):
     """
     Carica tutto il dataset (spettri) in una lista di elementi [filename , matrix ]
     """
@@ -167,7 +167,7 @@ def load_DATASET(datasetPath, fileslist=None, verbose=True):
             data = [file, matrix]
             dataset.append(data)
             i += 1
-    print('load {0} file'.format(i))
+    print('{0} file loaded'.format(i))
     return dataset
 
 
