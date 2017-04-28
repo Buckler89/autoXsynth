@@ -22,3 +22,17 @@ test_VES\.conf
 wavs/source/stft-1024/
 
 wavs/source/stft-2048/Beethoven_Symph7_short\.npy
+
+*.conf
+
+*.wav
+
+*.npy
+
+*.csv
+
+result_monster/process_441\.json
+
+result_monster/process_441\.log
+
+metro_features\.py
