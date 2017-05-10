@@ -182,6 +182,7 @@ baseResultPath = os.path.join(root_dir,'result')
 logFolder = os.path.join(baseResultPath, 'logs')
 csvFolder = os.path.join(baseResultPath, 'csv')
 wavDestPath = os.path.join(baseResultPath, 'reconstructedWav')
+modelDestPath = os.path.join(baseResultPath, 'model')
 argsFolder = os.path.join(baseResultPath, 'args')
 predFolder = os.path.join(baseResultPath, 'preds')
 
@@ -289,7 +290,8 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
                   nameFileLogCsv=nameFileLogCsv)
 
 if args.save_model:
-    m.save('model_'+strID+'.hd5')
+    modelName = 'model_'+strID+'.hd5'
+    m.save(os.path.join(wavDestPath, modelName))
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
 

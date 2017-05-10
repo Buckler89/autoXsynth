@@ -109,7 +109,6 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
         for x in np.hstack(notes):
             if isinstance(x, Iterable):
                 for y in x:
-
                     single_dim_array = np.append(single_dim_array, y)
             else:
                 single_dim_array = np.append(single_dim_array, x)
