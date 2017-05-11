@@ -11,6 +11,7 @@ import dataset_manupulation as dm
 from os import path
 import argparse
 import os
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=gpu,floatX=float32"
 import json
 import fcntl
 import time
@@ -48,8 +49,8 @@ class Trainer(object):
         #self.dataset_mean = np.load(os.path.join(MODEL_MEANS_BASEPATH, "{}_mean.npy".format(model_module.BASE_NAME)))
         self.optimizer = optimizer if optimizer != 'sgd' else SGD(lr=self.init_lr, momentum=0.9, nesterov=True)
         self.in_memory_data = load_to_memory
-        self.y_train = y_train
-        self.y_val = y_val
+        self.y_train = np.asarray(y_train)
+        self.y_val = np.asarray(y_val)
         if self.in_memory_data:
             self.X_train = self._load_features(X_train)
             self.X_val = self._load_features(X_val)
@@ -58,17 +59,18 @@ class Trainer(object):
             self.X_val = X_val
 
     def _load_features(self, filenames):
-        features = list()
+        features = []
         for filename in filenames:
             feature_filename = os.path.join(trainStftPath, filename)
             feature = np.load(feature_filename)
+            feature = np.absolute(feature)
             #feature -= self.dataset_mean
             features.append(feature)
         # #TODO : Check shapes (Eventualmente troncare gli spettri (??)
-        # if K.image_dim_ordering() == 'th':
-        #     features = np.array(features).reshape(-1, 1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR)
-        # else:
-        #     features = np.array(features).reshape(-1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR, 1)
+        if K.image_dim_ordering() == 'th':
+            features = np.array(features).reshape(-1, 1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR)
+        else:
+            features = np.array(features).reshape(-1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR, 1)
         return features
 
     def _batch_generator(self, inputs, targets):
@@ -101,7 +103,12 @@ class Trainer(object):
                       loss='categorical_crossentropy',
                       metrics=['accuracy', fbeta_score])
 
-        history = model.fit_generator(self._batch_generator(self.X_train, self.y_train),
+        if self.in_memory_data:
+            history = model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE, nb_epoch=MAX_EPOCH_NUM,
+                                verbose=1, callbacks=[save_clb, early_stopping, lrs],
+                                validation_data=(self.X_val,self.y_val), shuffle=True)
+        else:
+            history = model.fit_generator(self._batch_generator(self.X_train, self.y_train),
                                       samples_per_epoch=self.model_module.SAMPLES_PER_EPOCH,
                                       nb_epoch=MAX_EPOCH_NUM,
                                       verbose=2,
