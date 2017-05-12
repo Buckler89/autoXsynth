@@ -500,7 +500,7 @@ class autoencoder_fall_detection:
 
         if params.RNN_type is not None:
             #bottleneck indicates if the central layer of autoencoder is not a dense layer, in order to obtain a symmentric autoencoder:
-            # dense-Rnn-dense. In this case te last number in dense_shape isn't the encoding layer.
+            # dense-Rnn-dense. In this case the last number in dense_shape isn't the encoding layer.
             bottlneck=1 #TODO FIND ETTER WAY TO DO THIS
             input_img = Input(shape=(params.frame_context, params.dense_input_shape))
         else:

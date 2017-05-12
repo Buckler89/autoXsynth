@@ -189,6 +189,7 @@ predFolder = os.path.join(baseResultPath, 'preds')
 u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(wavDestPath)
+u.makedir(modelDestPath)
 u.makedir(argsFolder)
 u.makedir(predFolder)
 
@@ -291,7 +292,8 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
 
 if args.save_model:
     modelName = 'model_'+strID+'.hd5'
-    m.save(os.path.join(wavDestPath, modelName))
+    m.save(os.path.join(modelDestPath, modelName))
+    print("model saved at {0}".format(os.path.join(wavDestPath, modelName)))
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
 
