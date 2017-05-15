@@ -327,3 +327,13 @@ def labelize_data(y):#TODO usare sklearn.preprocessing.LabelEncoder ?
         i += 1
 
     return numeric_labels
+
+
+#Create context: Mapping of multiple input frames into a single target frame
+def create_context(dataset, look_back=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset) - look_back - 1):
+        a = dataset[i:(i + look_back), :]
+        dataX.append(a)
+        dataY.append(dataset[i + look_back, :])
+    return np.array(dataX), np.array(dataY)

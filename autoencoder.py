@@ -496,66 +496,19 @@ class autoencoder_fall_detection:
 
         return self._autoencoder
 
-    def define_sequential_arch(self, params):
+    def define_sequential_arch(self, params=None, path=None):
+        if params is not None:
+            if params.RNN_type is not None:
+                #bottleneck indicates if the central layer of autoencoder is not a dense layer, in order to obtain a symmentric autoencoder:
+                # dense-Rnn-dense. In this case the last number in dense_shape isn't the encoding layer.
+                bottlneck=1 #TODO FIND ETTER WAY TO DO THIS
+                input_img = Input(shape=(params.frame_context, params.dense_input_shape))
+            else:
+                bottlneck=0 #TODO FIND ETTER WAY TO DO THIS
+                input_img = Input(shape=(params.dense_input_shape,))
 
-        if params.RNN_type is not None:
-            #bottleneck indicates if the central layer of autoencoder is not a dense layer, in order to obtain a symmentric autoencoder:
-            # dense-Rnn-dense. In this case the last number in dense_shape isn't the encoding layer.
-            bottlneck=1 #TODO FIND ETTER WAY TO DO THIS
-            input_img = Input(shape=(params.frame_context, params.dense_input_shape))
-        else:
-            bottlneck=0 #TODO FIND ETTER WAY TO DO THIS
-            input_img = Input(shape=(params.dense_input_shape,))
-
-        x = input_img
-        for i in range(len(params.dense_shapes)):
-            x = Dense(params.dense_shapes[i],
-                      init=params.init,
-                      activation=params.dense_activation,
-                      W_regularizer=eval(params.d_w_reg),
-                      b_regularizer=eval(params.d_b_reg),
-                      activity_regularizer=eval(params.d_a_reg),
-                      W_constraint=eval(params.d_w_constr),
-                      b_constraint=eval(params.d_b_constr),
-                      bias=params.bias)(x)
-            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
-            if (params.dropout):
-                x = Dropout(params.drop_rate)(x)
-            if (params.batch_norm):
-                x = BatchNormalization(mode=1)(x)
-
-        if params.RNN_type is not None:
-        # ---------------------------------------------------------- RNN Bottleneck
-
-            if params.RNN_type == 'LSTM':
-                x = LSTM(params.RNN_layer_shape,
-                         init=params.init,
-                         activation=params.dense_activation,
-                         return_sequences=False)(x)
-
-            elif params.RNN_type == 'SimpleRNN':
-                x = SimpleRNN(params.RNN_layer_shape,
-                              init=params.init,
-                              activation=params.dense_activation,
-                              return_sequences=False)(x)
-
-            elif params.RNN_type == 'GRU':
-                x = GRU(params.RNN_layer_shape,
-                        init=params.init,
-                        activation=params.dense_activation,
-                        return_sequences=False)(x)
-
-            if (params.dropout):
-                x = Dropout(params.drop_rate)(x)
-            if (params.batch_norm):
-                x = BatchNormalization(mode=1)(x)
-
-            print("RNN_layer[" + params.RNN_type + "] -> (" + str(params.RNN_layer_shape) + ")")
-        # ---------------------------------------------------------- Decoding
-
-        for i in range(len(params.dense_shapes) - (2-bottlneck), -1, -1):  # backwards indices last excluded
-
-            if i is not 0:
+            x = input_img
+            for i in range(len(params.dense_shapes)):
                 x = Dense(params.dense_shapes[i],
                           init=params.init,
                           activation=params.dense_activation,
@@ -565,58 +518,109 @@ class autoencoder_fall_detection:
                           W_constraint=eval(params.d_w_constr),
                           b_constraint=eval(params.d_b_constr),
                           bias=params.bias)(x)
+                print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
+                if (params.dropout):
+                    x = Dropout(params.drop_rate)(x)
                 if (params.batch_norm):
                     x = BatchNormalization(mode=1)(x)
-            # last dense with linear activation
-            elif params.hybrid_phase:
-                mod = Dense((int(params.dense_input_shape / 3)),
+
+            if params.RNN_type is not None:
+            # ---------------------------------------------------------- RNN Bottleneck
+
+                if params.RNN_type == 'LSTM':
+                    x = LSTM(params.RNN_layer_shape,
+                             init=params.init,
+                             activation=params.dense_activation,
+                             return_sequences=False)(x)
+
+                elif params.RNN_type == 'SimpleRNN':
+                    x = SimpleRNN(params.RNN_layer_shape,
+                                  init=params.init,
+                                  activation=params.dense_activation,
+                                  return_sequences=False)(x)
+
+                elif params.RNN_type == 'GRU':
+                    x = GRU(params.RNN_layer_shape,
                             init=params.init,
-                            activation='relu', # because the module is always positive
-                            W_regularizer=eval(params.d_w_reg),
-                            b_regularizer=eval(params.d_b_reg),
-                            activity_regularizer=eval(params.d_a_reg),
-                            W_constraint=eval(params.d_w_constr),
-                            b_constraint=eval(params.d_b_constr),
-                            bias=params.bias)(x)
-                cos = Dense((int(params.dense_input_shape / 3)),
-                            init=params.init,
-                            activation='tanh',
-                            W_regularizer=eval(params.d_w_reg),
-                            b_regularizer=eval(params.d_b_reg),
-                            activity_regularizer=eval(params.d_a_reg),
-                            W_constraint=eval(params.d_w_constr),
-                            b_constraint=eval(params.d_b_constr),
-                            bias=params.bias)(x)
-                sin = Dense((int(params.dense_input_shape / 3)),
-                            init=params.init,
-                            activation='tanh',
-                            W_regularizer=eval(params.d_w_reg),
-                            b_regularizer=eval(params.d_b_reg),
-                            activity_regularizer=eval(params.d_a_reg),
-                            W_constraint=eval(params.d_w_constr),
-                            b_constraint=eval(params.d_b_constr),
-                            bias=params.bias)(x)
-                x = Merge(mode='concat')([mod, cos, sin])
-            else:
-                x = Dense(params.dense_input_shape,
-                          init=params.init,
-                          activation='linear',
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
-                          activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
+                            activation=params.dense_activation,
+                            return_sequences=False)(x)
 
-            print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
-            if (params.dropout):
-                x = Dropout(params.drop_rate)(x)
+                if (params.dropout):
+                    x = Dropout(params.drop_rate)(x)
+                if (params.batch_norm):
+                    x = BatchNormalization(mode=1)(x)
 
-        #ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
+                print("RNN_layer[" + params.RNN_type + "] -> (" + str(params.RNN_layer_shape) + ")")
+            # ---------------------------------------------------------- Decoding
+
+            for i in range(len(params.dense_shapes) - (2-bottlneck), -1, -1):  # backwards indices last excluded
+
+                if i is not 0:
+                    x = Dense(params.dense_shapes[i],
+                              init=params.init,
+                              activation=params.dense_activation,
+                              W_regularizer=eval(params.d_w_reg),
+                              b_regularizer=eval(params.d_b_reg),
+                              activity_regularizer=eval(params.d_a_reg),
+                              W_constraint=eval(params.d_w_constr),
+                              b_constraint=eval(params.d_b_constr),
+                              bias=params.bias)(x)
+                    if (params.batch_norm):
+                        x = BatchNormalization(mode=1)(x)
+                # last dense with linear activation
+                elif params.hybrid_phase:
+                    mod = Dense((int(params.dense_input_shape / 3)),
+                                init=params.init,
+                                activation='relu', # because the module is always positive
+                                W_regularizer=eval(params.d_w_reg),
+                                b_regularizer=eval(params.d_b_reg),
+                                activity_regularizer=eval(params.d_a_reg),
+                                W_constraint=eval(params.d_w_constr),
+                                b_constraint=eval(params.d_b_constr),
+                                bias=params.bias)(x)
+                    cos = Dense((int(params.dense_input_shape / 3)),
+                                init=params.init,
+                                activation='tanh',
+                                W_regularizer=eval(params.d_w_reg),
+                                b_regularizer=eval(params.d_b_reg),
+                                activity_regularizer=eval(params.d_a_reg),
+                                W_constraint=eval(params.d_w_constr),
+                                b_constraint=eval(params.d_b_constr),
+                                bias=params.bias)(x)
+                    sin = Dense((int(params.dense_input_shape / 3)),
+                                init=params.init,
+                                activation='tanh',
+                                W_regularizer=eval(params.d_w_reg),
+                                b_regularizer=eval(params.d_b_reg),
+                                activity_regularizer=eval(params.d_a_reg),
+                                W_constraint=eval(params.d_w_constr),
+                                b_constraint=eval(params.d_b_constr),
+                                bias=params.bias)(x)
+                    x = Merge(mode='concat')([mod, cos, sin])
+                else:
+                    x = Dense(params.dense_input_shape,
+                              init=params.init,
+                              activation='linear',
+                              W_regularizer=eval(params.d_w_reg),
+                              b_regularizer=eval(params.d_b_reg),
+                              activity_regularizer=eval(params.d_a_reg),
+                              W_constraint=eval(params.d_w_constr),
+                              b_constraint=eval(params.d_b_constr),
+                              bias=params.bias)(x)
+
+                print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
+                if (params.dropout):
+                    x = Dropout(params.drop_rate)(x)
+
+            #ATTENZIONE: nostra versione keras1.2. nella documentazione ufficiale dropout è cambiato ma a noi serve il vecchio ovverro quello con il parametro "p"
 
 
-        decoded = x
-        self._autoencoder = Model(input_img, decoded)
+            decoded = x
+            self._autoencoder = Model(input_img, decoded)
+
+        elif path is not None:
+            self._autoencoder = load_model(path)
+
         self._autoencoder.summary()
         self._autoencoder.name = 'Autoencoder'
         return self._autoencoder
