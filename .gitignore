@@ -36,3 +36,7 @@ result_monster/process_441\.json
 result_monster/process_441\.log
 
 metro_features\.py
+
+weights/multilayer/epoch\.128-val_loss\.0\.866-fbeta\.0\.782\.hdf5
+
+weights/singlelayer/epoch\.115-val_loss\.0\.902-fbeta\.0\.673\.hdf5
