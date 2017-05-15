@@ -63,14 +63,16 @@ class Trainer(object):
         for filename in filenames:
             feature_filename = os.path.join(trainStftPath, filename)
             feature = np.load(feature_filename)
-            feature = np.absolute(feature)
+            #feature = np.absolute(feature)
             #feature -= self.dataset_mean
-            features.append(feature)
-        # #TODO : Check shapes (Eventualmente troncare gli spettri (??)
+            #LOADS Spectrograms of each sequence --> Logmelspectr --> truncate @ 2 seconds
+            melspectr = librosa.feature.melspectrogram(S=feature, n_mels=self.model_module.N_MEL_BANDS, fmax=FS/2)
+            logmelspectr = librosa.logamplitude(melspectr**2, ref_power=1.0)
+            features.append(logmelspectr[:, 0:SEGMENT_DUR])
         if K.image_dim_ordering() == 'th':
-            features = np.array(features).reshape(-1, 1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR)
+            features = np.array(features).reshape(-1, 1, self.model_module.N_MEL_BANDS, SEGMENT_DUR)
         else:
-            features = np.array(features).reshape(-1, self.model_module.N_MEL_BANDS, self.model_module.SEGMENT_DUR, 1)
+            features = np.array(features).reshape(-1, self.model_module.N_MEL_BANDS, SEGMENT_DUR, 1)
         return features
 
     def _batch_generator(self, inputs, targets):
@@ -147,9 +149,10 @@ parser.add_argument('--load_to_memory', action='store_true', dest='load_to_memor
 parser.add_argument("-hp", "--hybrid-phase", dest="hybrid_phase", default=False, action="store_true")
 parser.add_argument("-ts", "--trainset", dest="trainset", default="train")
 parser.add_argument("-jp", "--json-path", dest="jsonPath", default=None)
-parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all',
-                    choices=["all", "bass", "brass", "flute", "guitar", "keyboard", "mallet", "organ", "reed", "string",
-                             "synth_lead", "vocal"])
+# parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all',
+#                     choices=["all", "bass", "brass", "flute", "guitar", "keyboard", "mallet", "organ", "reed", "string",
+#                              "synth_lead", "vocal"])
+parser.add_argument("-ifs", "--instrument-family-strs", dest="instrument_family_strs", default='all', action=eval_action)
 parser.add_argument("--notes", dest="notes", default='all', action=eval_action)
 parser.add_argument("-vmin", "--velocity-min", dest="velocityMin", default=0, type=int)
 parser.add_argument("-vmax", "--velocity-max", dest="velocityMax", default=127, type=int)
@@ -288,7 +291,7 @@ if 'nsynth' in args.trainset:
     else:
         notes = dm.parsenotes(args.notes)
 
-    notes = [24,25] #DEBUG
+    #notes = [24,25] #DEBUG
     jsonPath = os.path.join(root_dir, 'dataset', args.jsonPath)
     # with open(jsonPath, 'r', encoding='utf-8') as infile:
     with open(jsonPath, 'r') as infile:

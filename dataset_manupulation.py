@@ -114,20 +114,22 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
                     single_dim_array = np.append(single_dim_array, y)
             else:
                 single_dim_array = np.append(single_dim_array, x)
-    i=0
+    family_count = np.zeros((11),dtype=np.int)
     for key, value in jsonFile.items():
             if value['instrument_family_str'] in instrument_family_strs or instrument_family_strs == 'all':
+
                 if value['pitch'] in single_dim_array or notes is 'all':
 
                     if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
 
                         if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
+
                             label = value['instrument_family']
-                            selectedFile.append(key+'.npy')
-                            selectedLabel.append(label)
-                            i+=1
-                            if i >= maxNumberOfFile:
-                                break
+                            if family_count[label] < maxNumberOfFile:
+                                selectedFile.append(key+'.npy')
+                                selectedLabel.append(label)
+                                family_count[label] =+ 1
+
 
 
     return selectedFile, selectedLabel
