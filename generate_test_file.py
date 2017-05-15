@@ -32,7 +32,6 @@ dataset_path = 'dataset/source/stft-2048/test_set_paper/'
 modelBasePath = os.path.join(root_dir,'result','model')
 destBasePath = os.path.join(root_dir,'result','reconstructedWav')
 
-#todo for che cicla i modelli
 for root, dir, modelNames in os.walk(modelBasePath):
     for modelName in modelNames:
     #modelName = 'model_998.hd5'
