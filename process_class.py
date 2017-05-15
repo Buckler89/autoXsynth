@@ -282,7 +282,7 @@ ts0 = time.time()
 st0 = datetime.datetime.fromtimestamp(ts0).strftime('%Y-%m-%d %H:%M:%S')
 print("experiment start in date: " + st0)
 
-trainStftPath = os.path.join(root_dir, 'dataset', args.trainset, args.input_type)
+trainStftPath = os.path.join(args.trainset, args.input_type)
 
 # LOAD DATASET
 if 'nsynth' in args.trainset:
@@ -292,7 +292,7 @@ if 'nsynth' in args.trainset:
         notes = dm.parsenotes(args.notes)
 
     #notes = [24,25] #DEBUG
-    jsonPath = os.path.join(root_dir, 'dataset', args.jsonPath)
+    jsonPath = os.path.join(args.jsonPath)
     # with open(jsonPath, 'r', encoding='utf-8') as infile:
     with open(jsonPath, 'r') as infile:
         jsonFile = json.load(infile)
