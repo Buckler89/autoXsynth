@@ -93,7 +93,7 @@ class Trainer(object):
         early_stopping = EarlyStopping(monitor='val_loss', patience=EARLY_STOPPING_EPOCH)
         save_clb = ModelCheckpoint(
             "{weights_basepath}/{model_path}/".format(
-                weights_basepath=os.path.join(root_dir,MODEL_WEIGHT_BASEPATH),
+                weights_basepath=MODEL_WEIGHT_BASEPATH,
                 model_path=self.model_module.BASE_NAME) +
             "epoch.{epoch:02d}-val_loss.{val_loss:.3f}-fbeta.{val_fbeta_score:.3f}" + "-{key}.hdf5".format(
                 key=self.model_module.MODEL_KEY),
@@ -107,7 +107,7 @@ class Trainer(object):
 
         if self.in_memory_data:
             history = model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE, nb_epoch=MAX_EPOCH_NUM,
-                                verbose=1, callbacks=[save_clb, early_stopping, lrs],
+                                verbose=2, callbacks=[save_clb, early_stopping, lrs],
                                 validation_data=(self.X_val,self.y_val), shuffle=True)
         else:
             history = model.fit_generator(self._batch_generator(self.X_train, self.y_train),
@@ -121,7 +121,7 @@ class Trainer(object):
                                       nb_worker=1)
 
         pickle.dump(history.history, open('{history_basepath}/{model_path}/history_{model_key}.pkl'.format(
-            history_basepath=os.path.join(root_dir, MODEL_HISTORY_BASEPATH),
+            history_basepath=MODEL_HISTORY_BASEPATH,
             model_path=self.model_module.BASE_NAME,
             model_key=self.model_module.MODEL_KEY),
             'w'))
@@ -252,9 +252,9 @@ u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(argsFolder)
 u.makedir(predFolder)
-u.makedir(os.path.join(root_dir,MODEL_HISTORY_BASEPATH))
-u.makedir(os.path.join(root_dir,MODEL_MEANS_BASEPATH))
-u.makedir(os.path.join(root_dir,MODEL_WEIGHT_BASEPATH))
+u.makedir(MODEL_HISTORY_BASEPATH)
+u.makedir(MODEL_MEANS_BASEPATH)
+u.makedir(MODEL_WEIGHT_BASEPATH)
 
 nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
 nameFileLogCsv = os.path.join(csvFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis

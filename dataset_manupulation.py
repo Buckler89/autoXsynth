@@ -124,9 +124,17 @@ def scanJson(jsonFile, instrument_family_strs='all', notes='all', instrument_sou
                         if value['instrument_source_str'] in instrument_source_strs or instrument_source_strs == 'all':
 
                             if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
-                                selectedFile.append(key+'.npy')
+                                selectedFile.append(key + '.npy')
                                 selectedLabel.append(label)
-                                family_count[label] = family_count[label]+1
+                                family_count[label] = family_count[label] + 1
+
+                        # HARDCORE CODING (to include synth lead with acoustic source)
+                        elif value['instrument_family_str'] == 'synth_lead' and instrument_source_strs == 'acoustic':
+
+                            if value['velocity'] >= velocityMin and value['velocity'] <= velocityMax:
+                                selectedFile.append(key + '.npy')
+                                selectedLabel.append(label)
+                                family_count[label] = family_count[label] + 1
 
 
 
