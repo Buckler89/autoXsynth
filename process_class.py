@@ -252,9 +252,9 @@ u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(argsFolder)
 u.makedir(predFolder)
-u.makedir(MODEL_HISTORY_BASEPATH)
-u.makedir(MODEL_MEANS_BASEPATH)
-u.makedir(MODEL_WEIGHT_BASEPATH)
+u.makedir(os.path.join(MODEL_HISTORY_BASEPATH,args.model))
+u.makedir(os.path.join(MODEL_MEANS_BASEPATH,args.model))
+u.makedir(os.path.join(MODEL_WEIGHT_BASEPATH,args.model))
 
 nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
 nameFileLogCsv = os.path.join(csvFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis
