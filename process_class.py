@@ -93,7 +93,7 @@ class Trainer(object):
         early_stopping = EarlyStopping(monitor='val_loss', patience=EARLY_STOPPING_EPOCH)
         save_clb = ModelCheckpoint(
             "{weights_basepath}/{model_path}/".format(
-                weights_basepath=MODEL_WEIGHT_BASEPATH,
+                weights_basepath=os.path.join(root_dir,MODEL_WEIGHT_BASEPATH),
                 model_path=self.model_module.BASE_NAME) +
             "epoch.{epoch:02d}-val_loss.{val_loss:.3f}-fbeta.{val_fbeta_score:.3f}" + "-{key}.hdf5".format(
                 key=self.model_module.MODEL_KEY),
@@ -121,7 +121,7 @@ class Trainer(object):
                                       nb_worker=1)
 
         pickle.dump(history.history, open('{history_basepath}/{model_path}/history_{model_key}.pkl'.format(
-            history_basepath=MODEL_HISTORY_BASEPATH,
+            history_basepath=os.path.join(root_dir, MODEL_HISTORY_BASEPATH),
             model_path=self.model_module.BASE_NAME,
             model_key=self.model_module.MODEL_KEY),
             'w'))
@@ -252,6 +252,9 @@ u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(argsFolder)
 u.makedir(predFolder)
+u.makedir(os.path.join(root_dir,MODEL_HISTORY_BASEPATH))
+u.makedir(os.path.join(root_dir,MODEL_MEANS_BASEPATH))
+u.makedir(os.path.join(root_dir,MODEL_WEIGHT_BASEPATH))
 
 nameFileLog = os.path.join(logFolder, 'process_' + strID + '.log')
 nameFileLogCsv = os.path.join(csvFolder, 'process_' + strID + '.csv')  # log in csv file the losses for further analysis
@@ -303,6 +306,12 @@ if 'nsynth' in args.trainset:
                                     velocityMin=args.velocityMin,
                                     velocityMax=args.velocityMax,
                                     maxNumberOfFile=args.maxNumberOfFile)
+
+    #HARDCORE CODING (to remove 0-th element (bass family)
+
+    a = np.ones_like(labels)*-1
+    labels = labels + a
+
     X_train, X_val, y_train, y_val = train_test_split(fileslist, to_categorical(np.array(labels, dtype=int)),
                                                       test_size=VALIDATION_SPLIT)
 else:
