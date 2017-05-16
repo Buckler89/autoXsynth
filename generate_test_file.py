@@ -21,11 +21,11 @@ nfft = 4096
 sr = 16000
 
 # set mix reconstruction params
-aS = 0.000
+aS = 0
 bS = 0.5
 aP = 1 - aS
 bP = 1 - bS
-aM = 0
+aM = 0.001
 
 root_dir = '/media/buckler/DataSSD/Phd/autoXsynthImproved/autoXsynth'
 dataset_path = 'dataset/source/stft-2048/test_set_paper/'
