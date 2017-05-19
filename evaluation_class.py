@@ -63,7 +63,7 @@ class Evaluator(object):
 
     def compute_metrics(self, decisions):
         sys.stdout = open(os.path.join(SCORES_PATH, 'scores_class.txt'), 'w+')
-        for average_strategy in ["micro", "macro"]:
+        for average_strategy in ["micro", "macro", "weighted"]:
             print("{} average strategy: ".format(average_strategy))
             print("precision:\t{}".format(precision_score(self.y_true, decisions, average=average_strategy)))
             print("recall:\t{}".format(recall_score(self.y_true, decisions, average=average_strategy)))
