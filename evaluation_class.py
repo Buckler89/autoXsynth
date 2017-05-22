@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 from keras import backend as K
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix, classification_report
 from keras.utils.np_utils import to_categorical
 import librosa
 import sys
@@ -68,18 +68,23 @@ class Evaluator(object):
             print("precision:\t{}".format(precision_score(self.y_true, decisions, average=average_strategy)))
             print("recall:\t{}".format(recall_score(self.y_true, decisions, average=average_strategy)))
             print("f1:\t{}".format(f1_score(self.y_true, decisions, average=average_strategy)))
+        CM = np.asarray(confusion_matrix(self.y_true, decisions, labels=[0,1,2,3,4,5,6,7,8,9]), dtype=int)
+        np.savetxt(os.path.join(SCORES_PATH, 'CM.txt'), CM)
+        print(classification_report(self.y_true, decisions, labels=[0,1,2,3,4,5,6,7,8,9],
+                                    target_names=['brass','flute','guitar','keyboard','mallet','organ','reed','string','synth_lead','vocal']))
 
     def evaluate(self):
         model = self.model_module.build_model(N_CLASSES)
         model.load_weights(self.weights_path)
         model.compile(optimizer="sgd", loss="categorical_crossentropy")
         preds_tot = np.zeros((1, N_CLASSES))
+        #preds_seq = self.compute_prediction_scores_raw(model, self.X[-1])
         for audio_filename in self.X:
             preds_seq = self.compute_prediction_scores_raw(model, audio_filename)
             preds_tot = np.concatenate((preds_tot, preds_seq), axis=0)
         preds_tot = np.delete(preds_tot, 0, 0)
         decisions = np.argmax(preds_tot,axis=1)
-        np.savetxt(os.path.join(SCORES_PATH, 'predictions.txt'),  preds_tot)
+        #np.savetxt(os.path.join(SCORES_PATH, 'predictions.txt'),  preds_tot)
         np.savetxt(os.path.join(SCORES_PATH, 'decisions.txt'), decisions)
         if self.metrics:
             self.compute_metrics(decisions)
@@ -108,7 +113,9 @@ class Evaluator(object):
         #LOADS Spectrograms of each sequence --> Logmelspectr --> truncate @ 2 seconds
         melspectr = librosa.feature.melspectrogram(S=feature, n_mels=self.model_module.N_MEL_BANDS, fmax=FS/2)
         logmelspectr = librosa.logamplitude(melspectr**2, ref_power=1.0)
-        features.append(logmelspectr[:, 0:SEGMENT_DUR])
+        feat = np.zeros((self.model_module.N_MEL_BANDS, SEGMENT_DUR))
+        feat[:logmelspectr.shape[0],:logmelspectr.shape[1]] = logmelspectr
+        features.append(feat)
         if K.image_dim_ordering() == 'th':
             features = np.array(features).reshape(-1, 1, self.model_module.N_MEL_BANDS, SEGMENT_DUR)
         else:
@@ -158,6 +165,7 @@ def main():
     except ImportError, e:
         print e
 
+    os.mkdir(SCORES_PATH)
     evaluator = Evaluator(model_module, args.weights_path, args.evaluation_strategy)
     evaluator.evaluate()
 
