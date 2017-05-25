@@ -28,8 +28,8 @@ bP = 1 - bS
 aM = 0
 
 root_dir = os.getcwd()
-dataset_path = 'dataset/source/stft-2048/test_set_paper/trimmed/stft-2048'
-modelBasePath = os.path.join(root_dir,'result','model','todo')
+dataset_path = 'dataset/source/stft-2048/test_set_paper/'
+modelBasePath = os.path.join(root_dir,'result','model')
 destBasePath = os.path.join(root_dir,'result','reconstructedWav_for_paper','trimmed')
 
 for root, dir, modelNames in os.walk(modelBasePath):
