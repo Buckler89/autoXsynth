@@ -1,6 +1,6 @@
 from AudioFeatures import *
 
-audio_files_path = 'dataset/train_google_subset_1_detune'
+audio_files_path = 'dataset/test_set_paper/trimmed'
 HOP = 2048
 FTBINS = 4096
 SR = 16000
