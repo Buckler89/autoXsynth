@@ -16,6 +16,6 @@ ALLOWED_MODELS = ['han16', 'singlelayer', 'multilayer']
 #NSYNTH_TESTING_META_PATH = '/media/fabio/DATA/Work/crossSynth/autoXsynth/dataset/Autoencoder-Dataset/list.txt'
 #NSYNT_TESTING_FEATURES = '/media/fabio/DATA/Work/crossSynth/autoXsynth/dataset/Autoencoder-Dataset/stft-2048'
 NSYNTH_TESTING_META_PATH = '/media/fabio/DATA/Work/crossSynth/autoXsynth/dataset/reconstructedWav_for_paper/list709.txt'
-NSYNT_TESTING_FEATURES = '/media/fabio/DATA/Work/crossSynth/autoXsynth/dataset/reconstructedWav_for_paper/'
-SCORES_PATH = './Scores_VOCAL'
+NSYNT_TESTING_FEATURES = '/media/fabio/DATA/Work/crossSynth/autoXsynth/dataset/reconstructedWav_for_paper/trimmed'
+SCORES_PATH = './Scores_VOX'
 
