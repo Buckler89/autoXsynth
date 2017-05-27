@@ -2,10 +2,11 @@ import os
 import numpy as np
 import librosa
 from tqdm import tqdm
+import sklearn.preprocessing as preprocessing
 
 class AudioFeatures:
 
-    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None, free_disk=False):
+    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None, free_disk=False, norm=False):
         self.n_fft = n_fft
         self.feature = feature
         self.win_len = win_len
@@ -15,6 +16,7 @@ class AudioFeatures:
         self.extension = extension
         self.s_rate = s_rate
         self.free_disk = free_disk
+        self.normalize = norm
 
     def __str__(self):
         values = [
@@ -62,6 +64,9 @@ class AudioFeatures:
 
             else:
                 audio, sample_rate = librosa.core.load(filename, sr=self.s_rate, dtype=np.float32) #stereo sound to mono
+                if (self.normalize):
+                    scaler = preprocessing.MinMaxScaler(feature_range=(-1, 1))
+                    audio = scaler.fit_transform(audio)
 
                 if self.feature == 'stft':
                     y = librosa.core.stft(y=audio, n_fft=self.n_fft, hop_length=self.hop)
