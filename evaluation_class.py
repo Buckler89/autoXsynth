@@ -112,7 +112,8 @@ class Evaluator(object):
         #feature -= self.dataset_mean
         #LOADS Spectrograms of each sequence --> Logmelspectr --> truncate @ 2 seconds
         melspectr = librosa.feature.melspectrogram(S=feature, n_mels=self.model_module.N_MEL_BANDS, fmax=FS/2)
-        logmelspectr = librosa.logamplitude(melspectr**2, ref_power=1.0)
+        melspectr2 = melspectr**2
+        logmelspectr = librosa.logamplitude(melspectr2, ref=np.min)
         feat = np.zeros((self.model_module.N_MEL_BANDS, SEGMENT_DUR))
         feat[:logmelspectr.shape[0],:logmelspectr.shape[1]] = logmelspectr
         features.append(feat)
@@ -139,10 +140,10 @@ def main():
                          action="store",
                          dest="model",
                          help="-m model to evaluate")
-    aparser.add_argument("-w",
-                         action="store",
-                         dest="weights_path",
-                         help="-w path to file with weights for selected model")
+    # aparser.add_argument("-w",
+    #                      action="store",
+    #                      dest="weights_path",
+    #                      help="-w path to file with weights for selected model")
     aparser.add_argument("-s",
                          action="store",
                          dest="evaluation_strategy",
@@ -152,21 +153,22 @@ def main():
 
     args = aparser.parse_args()
 
-    if not (args.model and args.weights_path):
-        aparser.error("Please, specify the model and the weights path to evaluate!")
+    if not (args.model):
+        aparser.error("Please, specify the model to evaluate!")
     try:
         if args.model in ALLOWED_MODELS:
             model_module = importlib.import_module(".{}".format(args.model), "experiments.models")
             print "{} imported as 'model'".format(args.model)
         else:
             print "The specified model is not allowed"
-        if not os.path.exists(args.weights_path):
+        if not os.path.exists(WEIGHTS_PATH):
             print "The specified weights path doesn't exist"
     except ImportError, e:
         print e
 
-    os.mkdir(SCORES_PATH)
-    evaluator = Evaluator(model_module, args.weights_path, args.evaluation_strategy)
+    if (not os.path.exists(SCORES_PATH)):
+        os.makedirs(SCORES_PATH)
+    evaluator = Evaluator(model_module, WEIGHTS_PATH, args.evaluation_strategy)
     evaluator.evaluate()
 
 
