@@ -5,6 +5,10 @@ from tqdm import tqdm
 import sklearn.preprocessing as preprocessing
 
 class AudioFeatures:
+    """
+    Compute stft of audio file inside the directory ( <path> ) passed as parameter (recursive).
+    Put the stfts in in a sub folder inside <path> named <featType>-<hop>: all file in the same folder!!!
+    """
 
     def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None, free_disk=False, norm=False):
         self.n_fft = n_fft

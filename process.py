@@ -163,14 +163,7 @@ hops = args.hopsize
 nfft = 4096
 ###################################################END PARSER ARGUMENT SECTION########################################
 
-#Create context: Mapping of multiple input frames into a single target frame
-def create_context(dataset, look_back=1):
-    dataX, dataY = [], []
-    for i in range(len(dataset) - look_back - 1):
-        a = dataset[i:(i + look_back), :]
-        dataX.append(a)
-        dataY.append(dataset[i + look_back, :])
-    return np.array(dataX), np.array(dataY)
+
 
 ###################################################INIT LOG########################################
 # redirect all the stream of both standard.out and standard.err to the same logger
@@ -182,12 +175,14 @@ baseResultPath = os.path.join(root_dir,'result')
 logFolder = os.path.join(baseResultPath, 'logs')
 csvFolder = os.path.join(baseResultPath, 'csv')
 wavDestPath = os.path.join(baseResultPath, 'reconstructedWav')
+modelDestPath = os.path.join(baseResultPath, 'model')
 argsFolder = os.path.join(baseResultPath, 'args')
 predFolder = os.path.join(baseResultPath, 'preds')
 
 u.makedir(logFolder)
 u.makedir(csvFolder)
 u.makedir(wavDestPath)
+u.makedir(modelDestPath)
 u.makedir(argsFolder)
 u.makedir(predFolder)
 
@@ -269,7 +264,7 @@ print ("Batch size: " + str(batch_size) + " samples")
 
 #model definition
 if args.RNN_type is not None:
-    X_data, Y_data = create_context(X_data_reshaped, look_back=args.frame_context)
+    X_data, Y_data = dm.create_context(X_data_reshaped, look_back=args.frame_context)
     args.dense_input_shape = X_data.shape[2]
 else:
     args.dense_input_shape = X_data_reshaped.shape[1]
@@ -277,7 +272,7 @@ else:
     Y_data = X_data
 
 model = autoencoder.autoencoder_fall_detection(strID)
-model.define_sequential_arch(args)
+model.define_sequential_arch(params=args)
 
 #model copile
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
@@ -289,7 +284,9 @@ m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=ar
                   nameFileLogCsv=nameFileLogCsv)
 
 if args.save_model:
-    m.save('model_'+strID+'.hd5')
+    modelName = 'model_'+strID+'.hd5'
+    m.save(os.path.join(modelDestPath, modelName))
+    print("model saved at {0}".format(os.path.join(wavDestPath, modelName)))
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
 
@@ -308,7 +305,7 @@ if args.hybrid_phase:
     #source_sig_input = np.hstack([source_sig_module, source_sig_phase])
 
     if args.RNN_type is not None:
-        source_sig_input, _ = create_context(source_sig_input, look_back=args.frame_context)
+        source_sig_input, _ = dm.create_context(source_sig_input, look_back=args.frame_context)
         source_sig_module = source_sig_module[: - args.frame_context - 1, :]
         source_sig_phase = source_sig_phase[: - args.frame_context - 1, :]
 
@@ -336,7 +333,7 @@ else:
     source_sig.dtype = 'float32'
     source_sig_input = source_sig
     if args.RNN_type is not None:
-        source_sig_input, _ = create_context(source_sig, look_back=args.frame_context)
+        source_sig_input, _ = dm.create_context(source_sig, look_back=args.frame_context)
     prediction = np.asarray(model.reconstruct_spectrogram(source_sig_input), order="C")
     prediction_complex = prediction.view()
     prediction_complex.dtype = "complex64"
