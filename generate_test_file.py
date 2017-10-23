@@ -4,6 +4,16 @@
 Created on Thu May 19 17:00:00 2017
 
 @author: buckler
+
+
+
+
+DESCRIPTION:
+
+This script take a folder with one or more keras models (modelBasePath) and a folder (dataset_path) with some spectrogram (.npy).
+Then for each model generatethe the output file using all the input file. The results can be found in destination path 
+(destBasePath), divided in folders named with the id of the model.
+
 """
 import numpy as np
 import os
@@ -28,13 +38,12 @@ bP = 1 - bS
 aM = 0
 
 root_dir = os.getcwd()
-dataset_path = 'dataset/source/stft-2048/test_set_paper/'
-modelBasePath = os.path.join(root_dir,'result','model')
-destBasePath = os.path.join(root_dir,'result','reconstructedWav_for_paper','trimmed')
+dataset_path = os.path.join(root_dir,'dataset','source','stft-2048','Various_audio_tracks','16kHz','app')
+modelBasePath = os.path.join(root_dir,'result','model','magenta')
+destBasePath = os.path.join(root_dir,'result','reconstructedWav_for_paper','tracks_to_magenta')
 
 for root, dir, modelNames in os.walk(modelBasePath):
     for modelName in modelNames:
-    #modelName = 'model_998.hd5'
         modelPath = os.path.join(modelBasePath, modelName)
         strID = modelName.replace('model_','').replace('.hd5','')
         model = autoencoder.autoencoder_fall_detection(strID)
@@ -44,6 +53,7 @@ for root, dir, modelNames in os.walk(modelBasePath):
 
         for root, dirs, files in os.walk(dataset_path):
             for file in files:
+                print("loading "+file)
                 #sourceStftPath = [os.path.join(dataset_path, file)]
                 source_stft = dm.load_DATASET(dataset_path, [file])
 

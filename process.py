@@ -38,12 +38,14 @@ class eval_action(argparse.Action):
 
 
 # Global params
+parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
+
 parser.add_argument("-id", "--exp-index", dest="id", default=0, type=int)
 parser.add_argument("-root", "--root-path",dest="root_dir", default=".", type=str)
+parser.add_argument("-results", "--results-path",dest="results_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
 parser.add_argument("-sv", "--save-model", dest="save_model", default=False, action="store_true")
 
-parser.add_argument("-cf", "--config-file", dest="config_filename", default=None)
 parser.add_argument("-sp", "--score-path", dest="scorePath", default="score")
 parser.add_argument("-c", "--source", dest="source", default="Vox.npy")
 
@@ -171,13 +173,13 @@ strID = str(args.id)
 
 print("init log")
 root_dir = path.realpath(args.root_dir)
-baseResultPath = os.path.join(root_dir,'result')
-logFolder = os.path.join(baseResultPath, 'logs')
-csvFolder = os.path.join(baseResultPath, 'csv')
-wavDestPath = os.path.join(baseResultPath, 'reconstructedWav')
-modelDestPath = os.path.join(baseResultPath, 'model')
-argsFolder = os.path.join(baseResultPath, 'args')
-predFolder = os.path.join(baseResultPath, 'preds')
+baseResultPath = os.path.join(root_dir, args.results_dir, 'result')
+logFolder = os.path.join(baseResultPath, args.results_dir, 'logs')
+csvFolder = os.path.join(baseResultPath, args.results_dir, 'csv')
+wavDestPath = os.path.join(baseResultPath, args.results_dir, 'reconstructedWav')
+modelDestPath = os.path.join(baseResultPath, args.results_dir, 'model')
+argsFolder = os.path.join(baseResultPath, args.results_dir, 'args')
+predFolder = os.path.join(baseResultPath, args.results_dir, 'preds')
 
 u.makedir(logFolder)
 u.makedir(csvFolder)
