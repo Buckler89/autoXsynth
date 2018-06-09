@@ -12,7 +12,7 @@ from tensorflow.python.keras.models import Model, load_model
 from tensorflow.python.keras.layers import Input, Dense, Dropout, Flatten, Reshape, Convolution2D, MaxPooling2D, UpSampling2D, \
     ZeroPadding2D, Cropping2D, Concatenate, BatchNormalization, LSTM, SimpleRNN, GRU
 from tensorflow.python.keras.optimizers import Adam, Adadelta, SGD
-from tensorflow.python.keras.callbacks import Callback, ProgbarLogger, CSVLogger
+from tensorflow.python.keras.callbacks import Callback, ProgbarLogger, CSVLogger, EarlyStopping, TensorBoard
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, roc_auc_score, classification_report, f1_score
@@ -652,7 +652,7 @@ class autoencoder_fall_detection:
         return self._autoencoder
 
     def model_fit(self, x_train, y_train, x_dev=None, y_dev=None, validation_split=0.0, epochs=50, batch_size=128, shuffle=True, model=None,
-                  fit_net=True, patiance=20, nameFileLogCsv='losses.csv'):
+                  fit_net=True, patience=20, nameFileLogCsv='losses.csv', callback_list=[]):
         print("model_fit")
 
         if model is not None:
@@ -664,7 +664,11 @@ class autoencoder_fall_detection:
         else:
 
             csv_logger = CSVLogger(nameFileLogCsv)
-
+            early_stopping = EarlyStopping(patience=patience)
+            tensor_board = TensorBoard(log_dir='./logs', histogram_freq=1, batch_size=batch_size, write_graph=True,
+                                        write_grads=False, write_images=True)
+            callback_list.append(csv_logger)
+            callback_list.append(early_stopping)
             if (x_dev is not None and y_dev is not None) or validation_split > 0.0:  # se ho a disposizione un validation set allora faccio anche l'early stopping
 
                 self._autoencoder.fit(x_train, y_train,
@@ -672,7 +676,9 @@ class autoencoder_fall_detection:
                                       validation_split=validation_split,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
-                                      callbacks=[csv_logger],
+                                      # callbacks=[csv_logger, early_stopping, tensor_board],
+                                      # callbacks=[csv_logger, early_stopping],
+                                      callbacks=callback_list,
                                       verbose=2)  # with a value != 1 ProbarLogging is not called
 
             else:

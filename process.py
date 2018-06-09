@@ -23,7 +23,8 @@ import copy
 import logging
 import sys
 from tensorflow.python.keras.models import load_model
-
+# from tensorflow.python.keras.callbacks import Callback
+from CustomCallback import GenerateWavCallback
 ###################################################PARSER ARGUMENT SECTION########################################
 parser = argparse.ArgumentParser(description="AutoXSynthesis Autoencoder")
 
@@ -118,7 +119,7 @@ parser.add_argument("-bse", "--batch-size-effective", dest="batch_size_effective
 parser.add_argument("-f", "--fit-net", dest="fit_net", default=False, action="store_true")
 parser.add_argument("-o", "--optimizer", dest="optimizer", default="adadelta", choices=["adadelta", "adam", "sgd"])
 parser.add_argument("-l", "--loss", dest="loss", default="mse", choices=["mse", "msle"])
-parser.add_argument("-pt", "--patiance", dest="patiance", default=20, type=int)
+parser.add_argument("-pt", "--patience", dest="patience", default=20, type=int)
 parser.add_argument("-lr", "--learning-rate", dest="learning_rate", default=1.0, type=float)
 parser.add_argument("-vl", "--validation-split", dest="val_split", default=0.0, type=float)
 
@@ -165,8 +166,8 @@ if args.batch_size_effective is not None and args.batch_size_fract is not None:
 
 
 #Feature Params
-sr = args.sample_rate
-hops = int(args.hopsize)
+sample_rate = args.sample_rate
+hopsize = int(args.hopsize)
 nfft = int(args.nfft)
 win_len = int(args.win_len)
 ###################################################END PARSER ARGUMENT SECTION########################################
@@ -251,6 +252,14 @@ else:
 X_data_reshaped = X_data[0][1].T
 # X_data_reshaped = X_data_reshaped.T.view().T
 
+#load source
+sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.source, args.input_type)
+
+source_stft = dm.load_DATASET(sourceStftPath)
+# source = dm.reshape_set(source_stft, net_type='dense')
+source_sig = source_stft[0][1].T
+
+
 if args.hybrid_phase:
     X_data_module = np.absolute(X_data_reshaped)
     module_len = X_data_module.shape[1]
@@ -260,6 +269,16 @@ if args.hybrid_phase:
 
     X_data_reshaped = np.hstack([X_data_module, cos_phi_X_data, sin_phi_X_data])
     #X_data_reshaped = np.hstack([X_data_module, X_data_phase])
+
+    source_sig_module = np.absolute(source_sig)
+    source_sig_phase = np.angle(source_sig)
+    cos_source_sig = np.cos(source_sig_phase)
+    sin_source_sig = np.sin(source_sig_phase)
+    source_sig_input = np.concatenate([source_sig_module, cos_source_sig, sin_source_sig], axis=1)
+    if args.RNN_type is not None:
+        source_sig_input, _ = dm.create_context(source_sig_input, look_back=args.frame_context)
+        source_sig_module = source_sig_module[: - args.frame_context - 1, :]
+        source_sig_phase = source_sig_phase[: - args.frame_context - 1, :]
 
 else:
     X_data_reshaped.dtype = 'float32'
@@ -281,18 +300,21 @@ else:
     Y_data = X_data
 
 modelName = 'model_' + strID + '.hd5'
+
 if not args.load_model:
+
     model = autoencoder.autoencoder_fall_detection(strID)
     model.define_sequential_arch(params=args)
-
+    generate_wav_at_each_epoch = GenerateWavCallback(args, source_sig, predFolder, wavDestPath)
+    callback_list = [generate_wav_at_each_epoch]
     #model copile
     model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
     #model fit
     m = model.model_fit(X_data, Y_data, validation_split=args.val_split, epochs=args.epoch,
                       batch_size=batch_size, shuffle=args.shuffle,
-                      fit_net=args.fit_net, patiance=args.patiance,
-                      nameFileLogCsv=nameFileLogCsv)
+                      fit_net=args.fit_net, patience=args.patience,
+                      nameFileLogCsv=nameFileLogCsv, callback_list=callback_list)
 
     if args.save_model:
         m.save(os.path.join(modelDestPath, modelName))
@@ -302,11 +324,7 @@ else:
     m = load_model(os.path.join(modelDestPath, modelName))
     model = autoencoder.autoencoder_fall_detection(strID, model=m)
 
-sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.source, args.input_type)
 
-source_stft = dm.load_DATASET(sourceStftPath)
-# source = dm.reshape_set(source_stft, net_type='dense')
-source_sig = source_stft[0][1].T
 
 if args.hybrid_phase:
     #TODO DO it separately for module, sin, cos
@@ -353,13 +371,14 @@ else:
     prediction_complex.dtype = "complex64"
 
 # prediction_complex = librosa.util.fix_length(prediction_complex, len(prediction_complex) + win_len)
-S = librosa.core.istft(prediction_complex.T, hop_length=hops, win_length=win_len)
+S = librosa.core.istft(prediction_complex.T, hop_length=hopsize, win_length=win_len)
 out_filename = "reconstruction_" + strID + ".wav"
-librosa.output.write_wav(os.path.join(wavDestPath, out_filename), S, sr)
+librosa.output.write_wav(os.path.join(wavDestPath, out_filename), S, sample_rate)
 
 ts1 = time.time()
 tot_time = (ts1-ts0)/60
 
 print("Experiment enlapsed " +str(tot_time) + " minutes.")
 print("END.")
+
 
