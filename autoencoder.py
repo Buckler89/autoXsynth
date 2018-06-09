@@ -8,12 +8,11 @@ Created on Wed Jan 18 18:43:32 2017
 
 import os
 
-os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=gpu,floatX=float32"
-from keras.models import Model, load_model
-from keras.layers import Input, Dense, Dropout, Flatten, Reshape, Convolution2D, MaxPooling2D, UpSampling2D, \
-    ZeroPadding2D, Cropping2D, Merge, BatchNormalization, LSTM, SimpleRNN, GRU
-from keras.optimizers import Adam, Adadelta
-from keras.callbacks import Callback, ProgbarLogger, CSVLogger
+from tensorflow.python.keras.models import Model, load_model
+from tensorflow.python.keras.layers import Input, Dense, Dropout, Flatten, Reshape, Convolution2D, MaxPooling2D, UpSampling2D, \
+    ZeroPadding2D, Cropping2D, Concatenate, BatchNormalization, LSTM, SimpleRNN, GRU
+from tensorflow.python.keras.optimizers import Adam, Adadelta, SGD
+from tensorflow.python.keras.callbacks import Callback, ProgbarLogger, CSVLogger
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, roc_auc_score, classification_report, f1_score
@@ -343,15 +342,15 @@ class autoencoder_fall_detection:
             x = Convolution2D(params.kernel_number[i],
                               params.kernel_shape[i][0],
                               params.kernel_shape[i][1],
-                              init=params.cnn_init,
+                              kernel_initializer=params.cnn_init,
                               activation=params.cnn_conv_activation,
                               border_mode=params.border_mode,
                               subsample=tuple(params.strides[i]),
-                              W_regularizer=eval(params.cnn_w_reg),
-                              b_regularizer=eval(params.cnn_b_reg),
+                              kernel_regularizer=eval(params.cnn_w_reg),
+                              bias_regularizer=eval(params.cnn_b_reg),
                               activity_regularizer=eval(params.cnn_a_reg),
-                              W_constraint=eval(params.cnn_w_constr),
-                              b_constraint=eval(params.cnn_b_constr),
+                              kernel_constraint=eval(params.cnn_w_constr),
+                              bias_constraint=eval(params.cnn_b_constr),
                               bias=params.bias)(x)
 
             if params.border_mode == 'same':
@@ -385,13 +384,13 @@ class autoencoder_fall_detection:
 
         for i in range(len(inputs)):
             x = Dense(inputs[i],
-                      init=params.cnn_init,
+                      kernel_initializer=params.cnn_init,
                       activation=params.cnn_dense_activation,
-                      W_regularizer=eval(params.d_w_reg),
-                      b_regularizer=eval(params.d_b_reg),
+                      kernel_regularizer=eval(params.d_w_reg),
+                      bias_regularizer=eval(params.d_b_reg),
                       activity_regularizer=eval(params.d_a_reg),
-                      W_constraint=eval(params.d_w_constr),
-                      b_constraint=eval(params.d_b_constr),
+                      kernel_constraint=eval(params.d_w_constr),
+                      bias_constraint=eval(params.d_b_constr),
                       bias=params.bias)(x)
             print("dense[" + str(i) + "] -> (" + str(inputs[i]) + ")")
             if (params.dropout):
@@ -401,13 +400,13 @@ class autoencoder_fall_detection:
 
         for i in range(len(inputs) - 2, -1, -1):  # backwards indices last excluded
             x = Dense(inputs[i],
-                      init=params.cnn_init,
+                      kernel_initializer=params.cnn_init,
                       activation=params.cnn_dense_activation,
-                      W_regularizer=eval(params.d_w_reg),
-                      b_regularizer=eval(params.d_b_reg),
+                      kernel_regularizer=eval(params.d_w_reg),
+                      bias_regularizer=eval(params.d_b_reg),
                       activity_regularizer=eval(params.d_a_reg),
-                      W_constraint=eval(params.d_w_constr),
-                      b_constraint=eval(params.d_b_constr),
+                      kernel_constraint=eval(params.d_w_constr),
+                      bias_constraint=eval(params.d_b_constr),
                       bias=params.bias)(x)
             print("dense[" + str(i) + "] -> (" + str(inputs[i]) + ")")
             if (params.dropout):
@@ -421,15 +420,15 @@ class autoencoder_fall_detection:
             x = Convolution2D(params.kernel_number[i],
                               params.kernel_shape[i][0],
                               params.kernel_shape[i][1],
-                              init=params.cnn_init,
+                              kernel_initializer=params.cnn_init,
                               activation=params.cnn_conv_activation,
                               border_mode=params.border_mode,
                               subsample=tuple(params.strides[i]),
-                              W_regularizer=eval(params.cnn_w_reg),
-                              b_regularizer=eval(params.cnn_b_reg),
+                              kernel_regularizer=eval(params.cnn_w_reg),
+                              bias_regularizer=eval(params.cnn_b_reg),
                               activity_regularizer=eval(params.cnn_a_reg),
-                              W_constraint=eval(params.cnn_w_constr),
-                              b_constraint=eval(params.cnn_b_constr),
+                              kernel_constraint=eval(params.cnn_w_constr),
+                              bias_constraint=eval(params.cnn_b_constr),
                               bias=params.bias)(x)
 
             if params.border_mode == 'same':
@@ -479,15 +478,15 @@ class autoencoder_fall_detection:
         decoded = Convolution2D(params.cnn_input_shape[0],
                                 params.kernel_shape[0][0],
                                 params.kernel_shape[0][1],
-                                init=params.cnn_init,
+                                kernel_initializer=params.cnn_init,
                                 activation=params.cnn_conv_activation,
                                 border_mode=params.border_mode,
                                 subsample=(1,1),
-                                W_regularizer=eval(params.cnn_w_reg),
-                                b_regularizer=eval(params.cnn_b_reg),
+                                kernel_regularizer=eval(params.cnn_w_reg),
+                                bias_regularizer=eval(params.cnn_b_reg),
                                 activity_regularizer=eval(params.cnn_a_reg),
-                                W_constraint=eval(params.cnn_w_constr),
-                                b_constraint=eval(params.cnn_b_constr),
+                                kernel_constraint=eval(params.cnn_w_constr),
+                                bias_constraint=eval(params.cnn_b_constr),
                                 bias=params.bias)(x)
 
         self._autoencoder = Model(input_img, decoded)
@@ -510,45 +509,45 @@ class autoencoder_fall_detection:
             x = input_img
             for i in range(len(params.dense_shapes)):
                 x = Dense(params.dense_shapes[i],
-                          init=params.init,
+                          kernel_initializer=params.init,
                           activation=params.dense_activation,
-                          W_regularizer=eval(params.d_w_reg),
-                          b_regularizer=eval(params.d_b_reg),
+                          kernel_regularizer=eval(params.d_w_reg),
+                          bias_regularizer=eval(params.d_b_reg),
                           activity_regularizer=eval(params.d_a_reg),
-                          W_constraint=eval(params.d_w_constr),
-                          b_constraint=eval(params.d_b_constr),
-                          bias=params.bias)(x)
+                          kernel_constraint=eval(params.d_w_constr),
+                          bias_constraint=eval(params.d_b_constr),
+                          use_bias=params.bias)(x)
                 print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
                 if (params.dropout):
                     x = Dropout(params.drop_rate)(x)
                 if (params.batch_norm):
-                    x = BatchNormalization(mode=1)(x)
+                    x = BatchNormalization()(x)
 
             if params.RNN_type is not None:
             # ---------------------------------------------------------- RNN Bottleneck
 
                 if params.RNN_type == 'LSTM':
                     x = LSTM(params.RNN_layer_shape,
-                             init=params.init,
+                             kernel_initializer=params.init,
                              activation=params.dense_activation,
                              return_sequences=False)(x)
 
                 elif params.RNN_type == 'SimpleRNN':
                     x = SimpleRNN(params.RNN_layer_shape,
-                                  init=params.init,
+                                  kernel_initializer=params.init,
                                   activation=params.dense_activation,
                                   return_sequences=False)(x)
 
                 elif params.RNN_type == 'GRU':
                     x = GRU(params.RNN_layer_shape,
-                            init=params.init,
+                            kernel_initializer=params.init,
                             activation=params.dense_activation,
                             return_sequences=False)(x)
 
                 if (params.dropout):
                     x = Dropout(params.drop_rate)(x)
                 if (params.batch_norm):
-                    x = BatchNormalization(mode=1)(x)
+                    x = BatchNormalization()(x)
 
                 print("RNN_layer[" + params.RNN_type + "] -> (" + str(params.RNN_layer_shape) + ")")
             # ---------------------------------------------------------- Decoding
@@ -557,56 +556,56 @@ class autoencoder_fall_detection:
 
                 if i is not 0:
                     x = Dense(params.dense_shapes[i],
-                              init=params.init,
+                              kernel_initializer=params.init,
                               activation=params.dense_activation,
-                              W_regularizer=eval(params.d_w_reg),
-                              b_regularizer=eval(params.d_b_reg),
+                              kernel_regularizer=eval(params.d_w_reg),
+                              bias_regularizer=eval(params.d_b_reg),
                               activity_regularizer=eval(params.d_a_reg),
-                              W_constraint=eval(params.d_w_constr),
-                              b_constraint=eval(params.d_b_constr),
-                              bias=params.bias)(x)
+                              kernel_constraint=eval(params.d_w_constr),
+                              bias_constraint=eval(params.d_b_constr),
+                              use_bias=params.bias)(x)
                     if (params.batch_norm):
-                        x = BatchNormalization(mode=1)(x)
+                        x = BatchNormalization()(x)
                 # last dense with linear activation
                 elif params.hybrid_phase:
                     mod = Dense((int(params.dense_input_shape / 3)),
-                                init=params.init,
+                                kernel_initializer=params.init,
                                 activation='relu', # because the module is always positive
-                                W_regularizer=eval(params.d_w_reg),
-                                b_regularizer=eval(params.d_b_reg),
+                                kernel_regularizer=eval(params.d_w_reg),
+                                bias_regularizer=eval(params.d_b_reg),
                                 activity_regularizer=eval(params.d_a_reg),
-                                W_constraint=eval(params.d_w_constr),
-                                b_constraint=eval(params.d_b_constr),
-                                bias=params.bias)(x)
+                                kernel_constraint=eval(params.d_w_constr),
+                                bias_constraint=eval(params.d_b_constr),
+                                use_bias=params.bias)(x)
                     cos = Dense((int(params.dense_input_shape / 3)),
-                                init=params.init,
+                                kernel_initializer=params.init,
                                 activation='tanh',
-                                W_regularizer=eval(params.d_w_reg),
-                                b_regularizer=eval(params.d_b_reg),
+                                kernel_regularizer=eval(params.d_w_reg),
+                                bias_regularizer=eval(params.d_b_reg),
                                 activity_regularizer=eval(params.d_a_reg),
-                                W_constraint=eval(params.d_w_constr),
-                                b_constraint=eval(params.d_b_constr),
-                                bias=params.bias)(x)
+                                kernel_constraint=eval(params.d_w_constr),
+                                bias_constraint=eval(params.d_b_constr),
+                                use_bias=params.bias)(x)
                     sin = Dense((int(params.dense_input_shape / 3)),
-                                init=params.init,
+                                kernel_initializer=params.init,
                                 activation='tanh',
-                                W_regularizer=eval(params.d_w_reg),
-                                b_regularizer=eval(params.d_b_reg),
+                                kernel_regularizer=eval(params.d_w_reg),
+                                bias_regularizer=eval(params.d_b_reg),
                                 activity_regularizer=eval(params.d_a_reg),
-                                W_constraint=eval(params.d_w_constr),
-                                b_constraint=eval(params.d_b_constr),
-                                bias=params.bias)(x)
-                    x = Merge(mode='concat')([mod, cos, sin])
+                                kernel_constraint=eval(params.d_w_constr),
+                                bias_constraint=eval(params.d_b_constr),
+                                use_bias=params.bias)(x)
+                    x = Concatenate()([mod, cos, sin])
                 else:
                     x = Dense(params.dense_input_shape,
-                              init=params.init,
+                              kernel_initializer=params.init,
                               activation='linear',
-                              W_regularizer=eval(params.d_w_reg),
-                              b_regularizer=eval(params.d_b_reg),
+                              kernel_regularizer=eval(params.d_w_reg),
+                              bias_regularizer=eval(params.d_b_reg),
                               activity_regularizer=eval(params.d_a_reg),
-                              W_constraint=eval(params.d_w_constr),
-                              b_constraint=eval(params.d_b_constr),
-                              bias=params.bias)(x)
+                              kernel_constraint=eval(params.d_w_constr),
+                              bias_constraint=eval(params.d_b_constr),
+                              use_bias=params.bias)(x)
 
                 print("dense[" + str(i) + "] -> (" + str(params.dense_shapes[i]) + ")")
                 if (params.dropout):
@@ -622,7 +621,7 @@ class autoencoder_fall_detection:
             self._autoencoder = load_model(path)
 
         self._autoencoder.summary()
-        self._autoencoder.name = 'Autoencoder'
+        # self._autoencoder.name = 'Autoencoder'
         return self._autoencoder
 
 
@@ -643,6 +642,8 @@ class autoencoder_fall_detection:
             opti = Adadelta(lr=learning_rate, rho=0.95, epsilon=1e-06)
         if optimizer == "adam":
             opti = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        if optimizer == 'sgd':
+            opti = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
         if model is None:
             self._autoencoder.compile(optimizer=opti, loss=loss)
         else:
@@ -650,7 +651,7 @@ class autoencoder_fall_detection:
 
         return self._autoencoder
 
-    def model_fit(self, x_train, y_train, x_dev=None, y_dev=None, validation_split=0.0 ,nb_epoch=50, batch_size=128, shuffle=True, model=None,
+    def model_fit(self, x_train, y_train, x_dev=None, y_dev=None, validation_split=0.0, epochs=50, batch_size=128, shuffle=True, model=None,
                   fit_net=True, patiance=20, nameFileLogCsv='losses.csv'):
         print("model_fit")
 
@@ -667,7 +668,7 @@ class autoencoder_fall_detection:
             if (x_dev is not None and y_dev is not None) or validation_split > 0.0:  # se ho a disposizione un validation set allora faccio anche l'early stopping
 
                 self._autoencoder.fit(x_train, y_train,
-                                      nb_epoch=nb_epoch,
+                                      epochs=epochs,
                                       validation_split=validation_split,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
@@ -676,7 +677,7 @@ class autoencoder_fall_detection:
 
             else:
                 self._autoencoder.fit(x_train, y_train,
-                                      nb_epoch=nb_epoch,
+                                      epochs=epochs,
                                       batch_size=batch_size,
                                       shuffle=shuffle,
                                       callbacks=[csv_logger],

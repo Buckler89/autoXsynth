@@ -14,14 +14,15 @@ import dataset_manupulation as dm
 from os import path
 import argparse
 import os
-import errno
 import json
-import fcntl
 import time
 import datetime
 import utility as u
 import librosa
 import copy
+import logging
+import sys
+
 ###################################################PARSER ARGUMENT SECTION########################################
 parser = argparse.ArgumentParser(description="AutoXSynthesis Autoencoder")
 
@@ -42,7 +43,7 @@ parser.add_argument("-cf", "--config-file", dest="config_filename", default=None
 
 parser.add_argument("-id", "--exp-index", dest="id", default=0, type=int)
 parser.add_argument("-root", "--root-path",dest="root_dir", default=".", type=str)
-parser.add_argument("-results", "--results-path",dest="results_dir", default=".", type=str)
+# parser.add_argument("-results", "--results-path",dest="results_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
 parser.add_argument("-sv", "--save-model", dest="save_model", default=False, action="store_true")
 
@@ -62,7 +63,9 @@ parser.add_argument("-vmax", "--velocity-max", dest="velocityMax", default=127, 
 parser.add_argument("-iss", "--instrument-source-strs", dest="instrument_source_strs", default='all', choices=["all","acoustic","electronic","synthetic"])
 parser.add_argument("-mnof", "--max-number-of-file", dest="maxNumberOfFile", default=127, type=int)
 
-parser.add_argument("-hop", dest="hopsize", default=2048)
+parser.add_argument("--hop-size", dest="hopsize", default=2048)
+parser.add_argument("--nfft", dest="nfft", default=2048)
+parser.add_argument("--win-len", dest="win_len", default=2048)
 parser.add_argument("-sr", "--sample-rate", dest="sample_rate", default=22050, type=int)
 
 # CNN params
@@ -161,8 +164,9 @@ if args.batch_size_effective is not None and args.batch_size_fract is not None:
 
 #Feature Params
 sr = args.sample_rate
-hops = args.hopsize
-nfft = 4096
+hops = int(args.hopsize)
+nfft = int(args.nfft)
+win_len = int(args.win_len)
 ###################################################END PARSER ARGUMENT SECTION########################################
 
 
@@ -172,14 +176,15 @@ nfft = 4096
 strID = str(args.id)
 
 print("init log")
+results_dir = os.path.join('experiments', strID)
 root_dir = path.realpath(args.root_dir)
-baseResultPath = os.path.join(root_dir, args.results_dir, 'result')
-logFolder = os.path.join(baseResultPath, args.results_dir, 'logs')
-csvFolder = os.path.join(baseResultPath, args.results_dir, 'csv')
-wavDestPath = os.path.join(baseResultPath, args.results_dir, 'reconstructedWav')
-modelDestPath = os.path.join(baseResultPath, args.results_dir, 'model')
-argsFolder = os.path.join(baseResultPath, args.results_dir, 'args')
-predFolder = os.path.join(baseResultPath, args.results_dir, 'preds')
+baseResultPath = os.path.join(root_dir,     results_dir)
+logFolder = os.path.join(baseResultPath,     'logs')
+csvFolder = os.path.join(baseResultPath,     'csv')
+wavDestPath = os.path.join(baseResultPath,   'reconstructedWav')
+modelDestPath = os.path.join(baseResultPath, 'model')
+argsFolder = os.path.join(baseResultPath,    'args')
+predFolder = os.path.join(baseResultPath,    'preds')
 
 u.makedir(logFolder)
 u.makedir(csvFolder)
@@ -200,8 +205,6 @@ with open(os.path.join(jsonargsFileName), 'w') as file:
     json.dump(jsonargs, file,  indent=4)
 
 if args.log:
-    import logging
-    import sys
 
     u.makedir(logFolder)  # crea la fold solo se non esiste
 
@@ -241,8 +244,10 @@ if 'nsynth' in args.trainset:
     X_data = dm.load_DATASET(trainStftPath, fileslist)
 else:
     X_data = dm.load_DATASET(trainStftPath)
-X_data_reshaped = dm.reshape_set(X_data, net_type='dense')
-X_data_reshaped = X_data_reshaped[0].T.view().T
+# X_data_reshaped, label = dm.reshape_set(X_data, net_type='dense')
+
+X_data_reshaped = X_data[0][1].T
+# X_data_reshaped = X_data_reshaped.T.view().T
 
 if args.hybrid_phase:
     X_data_module = np.absolute(X_data_reshaped)
@@ -260,8 +265,8 @@ else:
 # calcolo il batch size
 batch_size = int(len(X_data_reshaped) * args.batch_size_fract)
 args.batch_size = batch_size
-print ("Training on " + str(len(X_data_reshaped)) + " samples")
-print ("Batch size: " + str(batch_size) + " samples")
+print("Training on " + str(X_data_reshaped.shape[0]) + " samples")
+print("Batch size: " + str(batch_size) + " samples")
 
 
 #model definition
@@ -280,7 +285,7 @@ model.define_sequential_arch(params=args)
 model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
 #model fit
-m = model.model_fit(X_data, Y_data, validation_split=args.val_split, nb_epoch=args.epoch,
+m = model.model_fit(X_data, Y_data, validation_split=args.val_split, epochs=args.epoch,
                   batch_size=batch_size, shuffle=args.shuffle,
                   fit_net=args.fit_net, patiance=args.patiance,
                   nameFileLogCsv=nameFileLogCsv)
@@ -290,11 +295,11 @@ if args.save_model:
     m.save(os.path.join(modelDestPath, modelName))
     print("model saved at {0}".format(os.path.join(wavDestPath, modelName)))
 
-sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.input_type, args.source)
+sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.source, args.input_type)
 
 source_stft = dm.load_DATASET(sourceStftPath)
-source = dm.reshape_set(source_stft, net_type='dense')
-source_sig = source[0].T.view().T
+# source = dm.reshape_set(source_stft, net_type='dense')
+source_sig = source_stft[0][1].T
 
 if args.hybrid_phase:
     #TODO DO it separately for module, sin, cos
@@ -340,9 +345,10 @@ else:
     prediction_complex = prediction.view()
     prediction_complex.dtype = "complex64"
 
-S = librosa.core.istft(prediction_complex.T, hop_length=hops, win_length=nfft)
+# prediction_complex = librosa.util.fix_length(prediction_complex, len(prediction_complex) + win_len)
+S = librosa.core.istft(prediction_complex.T, hop_length=hops, win_length=win_len)
 out_filename = "reconstruction_" + strID + ".wav"
-librosa.output.write_wav(os.path.join(wavDestPath,out_filename), S, sr)
+librosa.output.write_wav(os.path.join(wavDestPath, out_filename), S, sr)
 
 ts1 = time.time()
 tot_time = (ts1-ts0)/60

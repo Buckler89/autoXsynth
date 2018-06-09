@@ -213,7 +213,7 @@ def reshape_set(set_to_reshape, net_type, channels=1):
         label = []
         featSize = set_to_reshape[0][1].shape[0]
         type = set_to_reshape[0][1].dtype
-        shaped_matrix = np.empty([1, featSize],dtype=type)
+        shaped_matrix = np.empty([1, featSize], dtype=type)
         for sample in (set_to_reshape):
             shaped_matrix = np.vstack([shaped_matrix, sample[1].T])
         shaped_matrix = np.delete(shaped_matrix, 0, 0)

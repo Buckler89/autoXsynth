@@ -3,26 +3,27 @@ import numpy as np
 import os
 import librosa
 import utility as u
-sr = 22050
-hops = 2048
-nfft = 4096
-aS = 0.0
+sr = 44100
+hops = 1024
+nfft = 2048
+win_len = 2048
+aS = 0
 aP = 1-aS
-aM = 0.05
+aM = 0.0
 bS = 1
 bP = 1-bS
-frame_context = 3
+frame_context = 2
 
 root_path = os.getcwd()
-destFold = os.path.join(root_path,'mix_analysis')
+destFold = os.path.join(root_path, 'experiments', '1', 'mix_analysis')
 u.makedir(destFold)
-id='480'
-out_filename = os.path.join(destFold,"reconstructed_"+id+"_P.wav")
+id='1'
+out_filename = os.path.join(destFold,"reconstructed_"+id+"_ap"+str(aP)+".wav")
 
 predictName = "prediction_"+id+".npy"
-predicPathfile = os.path.join('result_monster','result','preds', predictName)
+predicPathfile = os.path.join('experiments', '1', 'preds', predictName)
 sourceName = 'Vox.npy'
-sourcePathfile = os.path.join('dataset','source', 'stft-2048', sourceName)
+sourcePathfile = os.path.join('dataset', 'source', 'vox',  'stft-2048', sourceName)
 
 source = np.load(sourcePathfile)
 predict = np.load(predicPathfile)
@@ -51,5 +52,5 @@ Phix = bS * source_sig_phase + bP * predict_sig_phase[:,:L]
 
 prediction_complex = Mx * Phix
 
-S = librosa.core.istft(prediction_complex, hop_length=hops, win_length=nfft)
+S = librosa.core.istft(prediction_complex, hop_length=hops, win_length=win_len)
 librosa.output.write_wav(os.path.join(out_filename,out_filename), S, sr)

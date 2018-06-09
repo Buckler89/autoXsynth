@@ -4,13 +4,14 @@ import librosa
 from tqdm import tqdm
 import sklearn.preprocessing as preprocessing
 
+
 class AudioFeatures:
     """
     Compute stft of audio file inside the directory ( <path> ) passed as parameter (recursive).
-    Put the stfts in in a sub folder inside <path> named <featType>-<hop>: all file in the same folder!!!
+    Put the stfts in in a sub folder inside <path> named <featType>-<n_fft>: all file in the same folder!!!
     """
 
-    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='wav', channels=20, s_rate=None, free_disk=False, norm=False):
+    def __init__(self, feature='stft', n_fft=2048, win_len=1024, hop=1024, path='samples', extension='.wav', channels=20, s_rate=None, free_disk=False, norm=False):
         self.n_fft = n_fft
         self.feature = feature
         self.win_len = win_len
@@ -36,6 +37,7 @@ class AudioFeatures:
 
     def scan_folder(self):
         samples = []
+        print('Scanning path {}'.format(os.path.join('./', self.path)))
         if not os.path.isdir('./' + self.path):
             print("This is not a directory!")
         else:
@@ -45,9 +47,9 @@ class AudioFeatures:
                     if ext == self.extension:
                         samples.append(os.path.join(root, file))
         if len(samples) == 0:
-            print ("NO FILES FOUND!")
+            print("NO FILES FOUND!")
         else:
-            print ("I've found " +str(len(samples)) + " files")
+            print("I've found " + str(len(samples)) + " files")
         return samples
 
 
@@ -55,7 +57,7 @@ class AudioFeatures:
     def feat_extract(self):
         samples_list = AudioFeatures.scan_folder(self)
 
-        feat_fold_name = os.path.join(self.path, self.feature + "-" + str(self.hop))
+        feat_fold_name = os.path.join(self.path, self.feature + "-" + str(self.n_fft))
 
         if not os.path.isdir(feat_fold_name):
             os.makedirs(feat_fold_name)
@@ -64,11 +66,11 @@ class AudioFeatures:
             feat_name = os.path.basename(filename)[0:-4] + ".npy"
             print("Extracting feature " + self.feature + " from file: " + filename)
             if os.path.isfile(os.path.join(feat_fold_name, feat_name)):
-                print ("This file exists. Skipping!")
+                print("This file exists. Skipping!")
 
             else:
-                audio, sample_rate = librosa.core.load(filename, sr=self.s_rate, dtype=np.float32) #stereo sound to mono
-                if (self.normalize):
+                audio, sample_rate = librosa.core.load(filename, sr=self.s_rate, dtype=np.float32)  # stereo sound to mono
+                if self.normalize:
                     scaler = preprocessing.MinMaxScaler(feature_range=(-1, 1))
                     audio = scaler.fit_transform(audio)
 
@@ -89,7 +91,7 @@ class AudioFeatures:
                     pass
 
     def feat_extract_from_npy(self):
-        feat_fold_name = os.path.join(os.path.splitext(self.path)[0], self.feature + "-" + str(self.hop))
+        feat_fold_name = os.path.join(os.path.splitext(self.path)[0], self.feature + "-" + str(self.n_fft))
         if not os.path.isdir(feat_fold_name):
             os.makedirs(feat_fold_name)
         data = np.load(self.path)
