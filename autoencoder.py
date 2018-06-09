@@ -273,15 +273,15 @@ def plot_decoded_img(label, original, decoded_img, destSavePath):
     plt.ion()#turn on interactive mode
 
 class autoencoder_fall_detection:
-    def __init__(self, id_process, case=None, fold=None):
+    def __init__(self, id_process, case=None, fold=None, model=0):
         """
 
         :param id: The id of the experiment. Is also the name of the logger that must be used!
         :param fit: useful in debug mode, if there is a model already fitted
         """
         print("__init__")
-        self._autoencoder = 0
-        self._case=case
+        self._autoencoder = model
+        self._case = case
         self._id = id_process
         self._fold = fold
 

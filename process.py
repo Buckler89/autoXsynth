@@ -22,6 +22,7 @@ import librosa
 import copy
 import logging
 import sys
+from tensorflow.python.keras.models import load_model
 
 ###################################################PARSER ARGUMENT SECTION########################################
 parser = argparse.ArgumentParser(description="AutoXSynthesis Autoencoder")
@@ -46,6 +47,7 @@ parser.add_argument("-root", "--root-path",dest="root_dir", default=".", type=st
 # parser.add_argument("-results", "--results-path",dest="results_dir", default=".", type=str)
 parser.add_argument("-log", "--logging", dest="log", default=False, action="store_true")
 parser.add_argument("-sv", "--save-model", dest="save_model", default=False, action="store_true")
+parser.add_argument("-lo", "--load-model", dest="load_model", default=False, action="store_true")
 
 parser.add_argument("-sp", "--score-path", dest="scorePath", default="score")
 parser.add_argument("-c", "--source", dest="source", default="Vox.npy")
@@ -278,22 +280,27 @@ else:
     X_data = X_data_reshaped
     Y_data = X_data
 
-model = autoencoder.autoencoder_fall_detection(strID)
-model.define_sequential_arch(params=args)
+modelName = 'model_' + strID + '.hd5'
+if not args.load_model:
+    model = autoencoder.autoencoder_fall_detection(strID)
+    model.define_sequential_arch(params=args)
 
-#model copile
-model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
+    #model copile
+    model.model_compile(optimizer=args.optimizer, loss=args.loss, learning_rate=args.learning_rate)
 
-#model fit
-m = model.model_fit(X_data, Y_data, validation_split=args.val_split, epochs=args.epoch,
-                  batch_size=batch_size, shuffle=args.shuffle,
-                  fit_net=args.fit_net, patiance=args.patiance,
-                  nameFileLogCsv=nameFileLogCsv)
+    #model fit
+    m = model.model_fit(X_data, Y_data, validation_split=args.val_split, epochs=args.epoch,
+                      batch_size=batch_size, shuffle=args.shuffle,
+                      fit_net=args.fit_net, patiance=args.patiance,
+                      nameFileLogCsv=nameFileLogCsv)
 
-if args.save_model:
-    modelName = 'model_'+strID+'.hd5'
-    m.save(os.path.join(modelDestPath, modelName))
-    print("model saved at {0}".format(os.path.join(wavDestPath, modelName)))
+    if args.save_model:
+        m.save(os.path.join(modelDestPath, modelName))
+        print("model saved at {0}".format(os.path.join(wavDestPath, modelName)))
+else:
+
+    m = load_model(os.path.join(modelDestPath, modelName))
+    model = autoencoder.autoencoder_fall_detection(strID, model=m)
 
 sourceStftPath = os.path.join(root_dir, 'dataset', 'source', args.source, args.input_type)
 
