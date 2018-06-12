@@ -58,6 +58,6 @@ class GenerateWavCallback(Callback):
 
             # prediction_complex = librosa.util.fix_length(prediction_complex, len(prediction_complex) + win_len)
             S = librosa.core.istft(prediction_complex.T, hop_length=int(self.args.hopsize), win_length=int(self.args.win_len))
-            out_filename = "reconstruction_" + str(epoch) + ".wav"
+            out_filename = "reconstruction_epoch_" + str(epoch) + ".wav"
             print("saving wav at {}".format(os.path.join(self.wav_dest_path, out_filename)))
             librosa.output.write_wav(os.path.join(self.wav_dest_path, out_filename), S, self.args.sample_rate)

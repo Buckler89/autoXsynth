@@ -15,13 +15,14 @@ bP = 1-bS
 frame_context = 2
 
 root_path = os.getcwd()
-destFold = os.path.join(root_path, 'experiments', '1', 'mix_analysis')
+expid = '5'
+destFold = os.path.join(root_path, 'experiments', expid, 'mix_analysis')
 u.makedir(destFold)
-id='1'
-out_filename = os.path.join(destFold,"reconstructed_"+id+"_ap"+str(aP)+".wav")
+epoch='20'
+out_filename = os.path.join(destFold,"reconstructed_"+epoch+"_ap"+str(aP)+".wav")
 
-predictName = "prediction_"+id+".npy"
-predicPathfile = os.path.join('experiments', '1', 'preds', predictName)
+predictName = "prediction_"+epoch+".npy"
+predicPathfile = os.path.join('experiments', expid, 'preds', predictName)
 sourceName = 'Vox.npy'
 sourcePathfile = os.path.join('dataset', 'source', 'vox',  'stft-2048', sourceName)
 
